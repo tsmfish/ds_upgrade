@@ -12,8 +12,6 @@ from netmiko import NetMikoTimeoutException, NetMikoAuthenticationException
 import re
 import logging
 import os.path
-import sys
-
 
 logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s', level = logging.WARN)
 
@@ -68,7 +66,8 @@ class DS(object):
         except NetMikoAuthenticationException:
             logging.warning(u'!!! Wrong password !!!!')
             print('!!! Wrong password !!!!')
-            sys.exit()
+            assert ExceptionWrongPassword(self.user)
+            # sys.exit()
 
     def get_base_info(self):
         """ Return base information about switch
@@ -169,3 +168,10 @@ class DS(object):
         return empty_folders
 
 
+class ExceptionWrongPassword(Exception):
+    def __init__(self, user_name):
+        super.__init__()
+        self.user_name = user_name
+
+    def get_user_name(self):
+        return self.user_name

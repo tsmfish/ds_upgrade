@@ -16,6 +16,7 @@ def scp_copy(ds, user, _password, what, where):
     """Function for recursive copy directory to ds
     :parameter what='folder/' copy content of this folder to remove folder (where)
     :parameter what='folder' copy this folder to remove with saving name
+    :exception Exception() if AuthenticationException occurred 5-times
     """
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
