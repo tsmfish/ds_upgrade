@@ -66,7 +66,7 @@ class DS(object):
         except NetMikoAuthenticationException:
             logging.warning(u'!!! Wrong password !!!!')
             print('!!! Wrong password !!!!')
-            assert ExceptionWrongPassword(self.user)
+            raise ExceptionWrongPassword(self.user)
             # sys.exit()
 
     def get_base_info(self):
