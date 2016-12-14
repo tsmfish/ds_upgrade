@@ -11,6 +11,7 @@ import time
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 from scp import SCPClient
 
+WAIT_TIME = 3
 
 def scp_copy(ds, user, _password, what, where):
     """Function for recursive copy directory to ds
@@ -24,9 +25,10 @@ def scp_copy(ds, user, _password, what, where):
         try:
             ssh.connect(ds, username=user, password=str(_password), port=22, look_for_keys=False, allow_agent=False)
             break
-        except AuthenticationException:
+        except AuthenticationException as e:
             # Try reconnect
-            time.sleep(2)
+            print "Warning: " + e.message
+            time.sleep(WAIT_TIME)
     else:
         raise Exception('Fail to copy SW to DS')
 
