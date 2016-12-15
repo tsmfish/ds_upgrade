@@ -4,15 +4,27 @@
 import getpass
 import optparse
 import re
+import threading
+from Queue import Queue
 
 from DS_Class import DS
 from copy_over_scp import scp_copy
 
+COMPLETE, FATAL, PERMANENT = 'complete', 'fatal', 'permanent'
+NAME, RESULT = 'name', 'result'
+
+new_SW = {
+    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
+    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
+folder_for_SW = 'images/TiMOS-7.0.R13'
+new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
+new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
+ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
 
 def print_for_ds(host, message):
     print "[%s] : " % host + message
 
-def update_ds(ds_name, user, password):
+def update_ds(ds_name, user, password, result_queue):
     # Create object
     i = DS(ds_name, user, password)
 
@@ -23,6 +35,7 @@ def update_ds(ds_name, user, password):
         i.conn()
     except Exception as e:
         print_for_ds(ds_name, e.message)
+        result_queue.put({NAME: ds_name, RESULT: FATAL})
         return
 
     i.get_base_info()
@@ -84,6 +97,7 @@ def update_ds(ds_name, user, password):
     print_for_ds(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=i.ip))
     if mb < 62:
         print_for_ds(ds_name, '!!! Not enough space for continue')
+        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
         return
 
     # Make image folder
@@ -99,6 +113,7 @@ def update_ds(ds_name, user, password):
         scp_copy(i.ip, i.user, i.password, new_SW[i.hw_ver], folder_for_SW)
     except Exception as e:
         print_for_ds(ds_name, e.message)
+        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
         return
 
     # Check free space
@@ -114,6 +129,7 @@ def update_ds(ds_name, user, password):
         # print_for_ds(ds_name, i.send('show bof'))
     else:
         print_for_ds(ds_name, '!!! New both.tim not from this platform')
+        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
         return
 
     # Save bof and config
@@ -133,27 +149,41 @@ def update_ds(ds_name, user, password):
         i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
         print_for_ds(ds_name, '!!! New boot.tim not from this platform')
+        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
         return
 
     print_for_ds(ds_name, '\n' + '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n')
+    result_queue.put({NAME: ds_name, RESULT: COMPLETE})
 
 parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog [ds_name]")
 (options, args) = parser.parse_args()
 if len(args) != 1:
     parser.error("incorrect number of arguments")
 
-
 user = getpass.getuser()
 secret = getpass.getpass('Password for DS:')
 
-new_SW = {
-    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
-    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
-folder_for_SW = 'images/TiMOS-7.0.R13'
-new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
-new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
-ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+', re.IGNORECASE)
 
-ds_name_list = (ds for ds in args if ds_name_pattern.match(ds))
-for ds_name in ds_name_list:
-    update_ds(ds_name, user, secret)
+result = {COMPLETE: list(), FATAL: list(), PERMANENT: (ds for ds in args if ds_name_pattern.match(ds))}
+
+while result[PERMANENT]:
+    result_queue, threads = Queue(), list()
+    for ds_name in result[PERMANENT]:
+        thread = threading.Thread(target=update_ds(), name=ds_name, args=(ds_name, user, secret, result_queue, ))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+    result = {COMPLETE: list(), FATAL: list(), PERMANENT: list()}
+
+    for thread_result in result_queue:
+        result[thread_result[RESULT]].append(thread_result[NAME])
+
+    print "Complete on: " + " ".join(result[COMPLETE])
+    print "Permanent fault on: " + " ".join(result[PERMANENT])
+    print "Fatal error on: " + " ".join(result[FATAL])
+
+    if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().capitalize() != 'Y':
+        break
