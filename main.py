@@ -6,44 +6,24 @@ import optparse
 import re
 
 from DS_Class import DS
-from DS_Class import ExceptionWrongPassword
 from copy_over_scp import scp_copy
 
 
 def print_for_ds(host, message):
     print "[%s] : " % host + message
 
-parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog [ds_name]")
-(options, args) = parser.parse_args()
-if len(args) != 1:
-    parser.error("incorrect number of arguments")
-
-
-user = getpass.getuser()
-secret = getpass.getpass('Password for DS:')
-
-new_SW = {
-    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
-    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
-folder_for_SW = 'images/TiMOS-7.0.R13'
-new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
-new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
-ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+', re.IGNORECASE)
-
-ds_name_list = (ds for ds in args if ds_name_pattern.match(ds))
-for ds_name in ds_name_list:
-
+def update_ds(ds_name, user, password):
     # Create object
-    i = DS(ds_name, user, secret)
+    i = DS(ds_name, user, password)
 
     # Connect and get basic inform
     print_for_ds(ds_name, '\n' + '=' * 15 + ' Start process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n')
 
     try:
         i.conn()
-    except ExceptionWrongPassword as e:
+    except Exception as e:
         print_for_ds(ds_name, e.message)
-        continue
+        return
 
     i.get_base_info()
 
@@ -103,8 +83,8 @@ for ds_name in ds_name_list:
     mb = i.free_space()
     print_for_ds(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=i.ip))
     if mb < 62:
-        print_error(ds_name, '!!! Not enough space for continue')
-        continue
+        print_for_ds(ds_name, '!!! Not enough space for continue')
+        return
 
     # Make image folder
     print_for_ds(ds_name, '*** Try to create directory \"images\"')
@@ -119,7 +99,7 @@ for ds_name in ds_name_list:
         scp_copy(i.ip, i.user, i.password, new_SW[i.hw_ver], folder_for_SW)
     except Exception as e:
         print_for_ds(ds_name, e.message)
-        continue
+        return
 
     # Check free space
     mb = i.free_space()
@@ -134,8 +114,7 @@ for ds_name in ds_name_list:
         # print_for_ds(ds_name, i.send('show bof'))
     else:
         print_for_ds(ds_name, '!!! New both.tim not from this platform')
-        continue
-        # sys.exit()
+        return
 
     # Save bof and config
     print_for_ds(ds_name, '*** Save new bof and config')
@@ -153,8 +132,28 @@ for ds_name in ds_name_list:
         # print_for_ds(ds_name, i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5))
         i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
-        print_error(ds_name, '!!! New boot.tim not from this platform')
-        continue
-        # sys.exit('!!! New boot.tim not from this platform')
+        print_for_ds(ds_name, '!!! New boot.tim not from this platform')
+        return
 
     print_for_ds(ds_name, '\n' + '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n')
+
+parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog [ds_name]")
+(options, args) = parser.parse_args()
+if len(args) != 1:
+    parser.error("incorrect number of arguments")
+
+
+user = getpass.getuser()
+secret = getpass.getpass('Password for DS:')
+
+new_SW = {
+    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
+    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
+folder_for_SW = 'images/TiMOS-7.0.R13'
+new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
+new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
+ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+', re.IGNORECASE)
+
+ds_name_list = (ds for ds in args if ds_name_pattern.match(ds))
+for ds_name in ds_name_list:
+    update_ds(ds_name, user, secret)
