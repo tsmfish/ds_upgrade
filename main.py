@@ -157,19 +157,18 @@ def update_ds(ds_name, user, password, result_queue):
 
 parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog [ds_name]")
 (options, args) = parser.parse_args()
-if len(args) != 1:
+if len(args) < 1:
     parser.error("incorrect number of arguments")
 
 user = getpass.getuser()
 secret = getpass.getpass('Password for DS:')
-
 
 result = {COMPLETE: list(), FATAL: list(), PERMANENT: (ds for ds in args if ds_name_pattern.match(ds))}
 
 while result[PERMANENT]:
     result_queue, threads = Queue(), list()
     for ds_name in result[PERMANENT]:
-        thread = threading.Thread(target=update_ds(), name=ds_name, args=(ds_name, user, secret, result_queue, ))
+        thread = threading.Thread(target=update_ds(), name=ds_name, args=(ds_name, user, secret, result_queue))
         thread.start()
         threads.append(thread)
 
