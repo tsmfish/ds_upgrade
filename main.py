@@ -155,34 +155,35 @@ def update_ds(ds_name, user, password, result_queue):
     print_for_ds(ds_name, '\n' + '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n')
     result_queue.put({NAME: ds_name, RESULT: COMPLETE})
 
-parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog [ds_name]")
-(options, args) = parser.parse_args()
-if len(args) < 1:
-    parser.error("incorrect number of arguments")
+if __name__ == "__main__":
+    parser = optparse.OptionParser(description='Prepare for DS upgrade', usage="usage: %prog ds_name ...")
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        parser.error("incorrect number of arguments")
 
-user = getpass.getuser()
-secret = getpass.getpass('Password for DS:')
+    user = getpass.getuser()
+    secret = getpass.getpass('Password for DS:')
 
-result = {COMPLETE: list(), FATAL: list(), PERMANENT: (ds for ds in args if ds_name_pattern.match(ds))}
+    result = {COMPLETE: list(), FATAL: list(), PERMANENT: (ds for ds in args if ds_name_pattern.match(ds))}
 
-while result[PERMANENT]:
-    result_queue, threads = Queue(), list()
-    for ds_name in result[PERMANENT]:
-        thread = threading.Thread(target=update_ds(), name=ds_name, args=(ds_name, user, secret, result_queue))
-        thread.start()
-        threads.append(thread)
+    while result[PERMANENT]:
+        result_queue, threads = Queue(), list()
+        for ds_name in result[PERMANENT]:
+            thread = threading.Thread(target=update_ds(), name=ds_name, args=(ds_name, user, secret, result_queue))
+            thread.start()
+            threads.append(thread)
 
-    for thread in threads:
-        thread.join()
+        for thread in threads:
+            thread.join()
 
-    result = {COMPLETE: list(), FATAL: list(), PERMANENT: list()}
+        result = {COMPLETE: list(), FATAL: list(), PERMANENT: list()}
 
-    for thread_result in result_queue:
-        result[thread_result[RESULT]].append(thread_result[NAME])
+        for thread_result in result_queue:
+            result[thread_result[RESULT]].append(thread_result[NAME])
 
-    print "Complete on: " + " ".join(result[COMPLETE])
-    print "Permanent fault on: " + " ".join(result[PERMANENT])
-    print "Fatal error on: " + " ".join(result[FATAL])
+        print "Complete on: " + " ".join(result[COMPLETE])
+        print "Permanent fault on: " + " ".join(result[PERMANENT])
+        print "Fatal error on: " + " ".join(result[FATAL])
 
-    if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().capitalize() != 'Y':
-        break
+        if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().upper() != 'Y':
+            break
