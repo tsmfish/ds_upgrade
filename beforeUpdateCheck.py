@@ -12,24 +12,28 @@ NAME, RESULT = 'name', 'result'
 FILE_TIMESTAMP_FORMAT = '%Y%m%d_%H%M%S'
 PRINT_TIMESTAMP_FORMAT = '%Y-%m-%d at %H:%M:%S'
 NEW_SW_VERSION = 'TiMOS-B-7.0.R13'
-FREE_SPACE_LIMIT = 65*1024*1024
+FREE_SPACE_LIMIT = 7*1024*1024
+
 
 class STATE:
     COMPLETE, \
     FATAL, \
     PERMANENT = 'complete', 'fatal', 'permanent'
 
+
 class CAUSE:
     DS_TYPE_NOT_MATCH = 'DS type and primary image type does not match'
     NO_PRIMARY_IMAGE_FILE = 'primary image file absent'
     NO_CONNECTION = 'no connection'
     NO_PRIMARY_IMAGE_BOF = 'no primary image in BOF'
+    SKIPPED = "Check was skipped by user"
+
 
 class RE:
     PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b')
     FILE_DATE = re.compile(r'\b\d\d\/\d\d\/\d\d\d\d\b')
     FILE_TIME = re.compile(r'\b\d\d:\d\d[am]\b')
-    DIR_FILE_PREAMBULE = re.compile(FILE_DATE+r'\s+?'+FILE_TIME+r'\s+?(?:<DIR>|\d+?)\s+?')
+    DIR_FILE_PREAMBLE = re.compile(FILE_DATE + r'\s+?' + FILE_TIME + r'\s+?(?:<DIR>|\d+?)\s+?')
     DS_TYPE = re.compile(r'\bSAS-[XM]\b')
     '''
     TiMOS-B-4.0.R2
@@ -40,6 +44,7 @@ class RE:
     SW_VERSION = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b')
     FREE_SPACE_SIZE = re.compile(r'\b(\d+?)\s+?bytes free\.')
     DS_NAME = re.compile(r'ds\d+?-[0-9a-z]+\b')
+
 
 def print_for_ds(host, message):
     print "[{0}] : ".format(host + message)
@@ -85,13 +90,14 @@ def log_to_file(host, cause, state, log_file_name=None):
 
 def make_check(host, user, password, log=None):
     """
-
-    :param host:
-    :param user:
-    :param password:
-    :param log:
-    :return:
+    Check primary-image form BOF: is value exist, is file exist, correct DS type in file, correct SW version in file
     """
+
+    answer = ''
+    while answer not in ('Y', 'S'):
+        answer = raw_input("Start check on {ds} (Y-yes/S-skip):".format(ds=host)).upper()
+        if answer == 'S': return
+
     ds = DS(host, user, password)
     try:
         ds.conn()
@@ -107,18 +113,28 @@ def make_check(host, user, password, log=None):
         log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_BOF, log)
         return
 
-    if not contains(ds.send(b'file dir ' + primary_bof_image), RE.DIR_FILE_PREAMBULE + primary_bof_image):
+    if not contains(ds.send(b'file dir ' + primary_bof_image), RE.DIR_FILE_PREAMBLE + primary_bof_image):
         print_for_ds(host, "Primary image file [{0}] not found".format(primary_bof_image))
         log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_FILE, log)
         return
 
     ds_type = extract(ds.send(b'show version'), RE.DS_TYPE)
-    primary_image_ds_type = extract(ds.send(b'file version ' + primary_bof_image), RE.DS_TYPE)
+    file_version = ds.send(b'file version ' + primary_bof_image)
+    primary_image_ds_type = extract(file_version, RE.DS_TYPE)
 
     if ds_type.lower() != primary_image_ds_type.lower():
         print_for_ds(host, "DS type and primary image type does not match.")
         log_to_file(host, CAUSE.DS_TYPE_NOT_MATCH, STATE.PERMANENT, log)
         return
+
+    sw_version_main_file = extract(file_version, RE.SW_VERSION)
+    answer = 'C'
+    while answer == 'C' and NEW_SW_VERSION.upper() != sw_version_main_file.upper():
+        while answer not in ('S', 'C'):
+            answer = raw_input('Primary file has version {sw_version} skip or check one more time (S-skip/C-check):'
+                               .format(sw_version=sw_version_main_file)).upper()
+        if answer == 'C':
+            sw_version_main_file = extract(ds.send(b'file version ' + primary_bof_image), RE.SW_VERSION)
 
     free_space_size = int(extract(ds.send(b'file dir'), RE.FREE_SPACE_SIZE))
     if free_space_size < FREE_SPACE_LIMIT:
@@ -134,27 +150,28 @@ def make_check(host, user, password, log=None):
            ds_type=ds_type,
            free_space=free_space_size), STATE.COMPLETE, log)
 
-parser = optparse.OptionParser(description='Check DS before upgrade', usage="usage: %prog [ds_name]")
-(options, args) = parser.parse_args()
-if len(args) < 1:
-    parser.error("incorrect number of arguments")
+if __name__ == "__main__":
+    parser = optparse.OptionParser(description='Check DS before upgrade', usage="usage: %prog ds_name ...")
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        parser.error("incorrect number of arguments")
 
-user = getpass.getuser()
-secret = getpass.getpass('Password for DS:')
+    user = getpass.getuser()
+    secret = getpass.getpass('Password for DS:')
 
-ds_list = (ds for ds in args if contains(ds, RE.DS_NAME))
+    ds_list = (ds for ds in args if contains(ds, RE.DS_NAME))
 
-print "Start audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
-if len(ds_list) == 1: make_check(ds_list[0], user, secret)
-else:
-    threads = list()
-    for ds in ds_list:
-        with threading.Thread(target=make_check(),
-                              name=ds,
-                              args=(ds, user, secret)) as thread:
-            thread.start()
-            threads.append(thread)
+    print "Start audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    if len(ds_list) == 1: make_check(ds_list[0], user, secret)
+    else:
+        threads = list()
+        for ds in ds_list:
+            with threading.Thread(target=make_check(),
+                                  name=ds,
+                                  args=(ds, user, secret)) as thread:
+                thread.start()
+                threads.append(thread)
 
-    for thread in threads: thread.join()
+        for thread in threads: thread.join()
 
-print "Finished audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    print "Finished audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
