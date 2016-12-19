@@ -30,10 +30,12 @@ class CAUSE:
 
 
 class RE:
+    FILE_DATE_STRING = r'\b\d\d\/\d\d\/\d\d\d\d\b'
+    FILE_TIME_STRING = r'\b\d\d:\d\d[am]\b'
     PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b')
-    FILE_DATE = re.compile(r'\b\d\d\/\d\d\/\d\d\d\d\b')
-    FILE_TIME = re.compile(r'\b\d\d:\d\d[am]\b')
-    DIR_FILE_PREAMBLE = re.compile(FILE_DATE + r'\s+?' + FILE_TIME + r'\s+?(?:<DIR>|\d+?)\s+?')
+    FILE_DATE = re.compile(FILE_DATE_STRING)
+    FILE_TIME = re.compile(FILE_TIME_STRING)
+    DIR_FILE_PREAMBLE = re.compile(FILE_DATE_STRING+r'\s+?'+FILE_TIME_STRING+r'\s+?(?:<DIR>|\d+?)\s+?')
     DS_TYPE = re.compile(r'\bSAS-[XM]\b')
     '''
     TiMOS-B-4.0.R2
