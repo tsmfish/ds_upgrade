@@ -163,8 +163,8 @@ if __name__ == "__main__":
 
     ds_list = (ds for ds in args if contains(ds, RE.DS_NAME))
 
-    print "Start audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
-    if len(ds_list) == 1: make_check(ds_list[0], user, secret)
+    print "Start audit: {0}".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    if len(list(ds_list)) == 1: make_check(ds_list.next(), user, secret)
     else:
         threads = list()
         for ds in ds_list:
@@ -176,4 +176,4 @@ if __name__ == "__main__":
 
         for thread in threads: thread.join()
 
-    print "Finished audit: ".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    print "Finished audit: {0}".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
