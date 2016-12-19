@@ -168,11 +168,9 @@ if __name__ == "__main__":
     else:
         threads = list()
         for ds in ds_list:
-            with threading.Thread(target=make_check(),
-                                  name=ds,
-                                  args=(ds, user, secret)) as thread:
-                thread.start()
-                threads.append(thread)
+            thread = threading.Thread(target=make_check, name=ds, args=(ds, user, secret))
+            thread.start()
+            threads.append(thread)
 
         for thread in threads: thread.join()
 
