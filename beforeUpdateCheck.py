@@ -61,7 +61,7 @@ def extract(string, regexp):
 
 
 def contains(string, regexp):
-    if regexp.search(string=string):
+    if regexp.search(string):
         return True
     else:
         return False
