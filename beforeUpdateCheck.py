@@ -100,6 +100,7 @@ def make_check(host, user, password, log=None):
         answer = raw_input("Start check on {ds} (Y-yes/S-skip):".format(ds=host)).upper()
         if answer == 'S': return
 
+    if not log: log = "{date}_{host}".format(date=datetime.today().strftime(FILE_TIMESTAMP_FORMAT), ds=host)
     ds = DS(host, user, password)
     try:
         ds.conn()
@@ -110,6 +111,8 @@ def make_check(host, user, password, log=None):
         return
 
     primary_bof_image = extract(ds.send(b'sow bof'), RE.PRIMARY_BOF_IMAGE)
+    print ds.send(b'show bof')
+    print primary_bof_image
     if not primary_bof_image:
         print_for_ds(host, "Primary image not found in BOF.")
         log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_BOF, log)
