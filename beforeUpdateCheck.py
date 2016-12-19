@@ -30,41 +30,41 @@ class CAUSE:
 
 
 class RE:
+    FLAGS = re.IGNORECASE
     FILE_DATE_STRING = r'\b\d\d\/\d\d\/\d\d\d\d\b'
     FILE_TIME_STRING = r'\b\d\d:\d\d[am]\b'
-    PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b')
+    PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b', FLAGS)
     FILE_DATE = re.compile(FILE_DATE_STRING)
     FILE_TIME = re.compile(FILE_TIME_STRING)
-    DIR_FILE_PREAMBLE = re.compile(FILE_DATE_STRING+r'\s+?'+FILE_TIME_STRING+r'\s+?(?:<DIR>|\d+?)\s+?')
-    DS_TYPE = re.compile(r'\bSAS-[XM]\b')
+    DIR_FILE_PREAMBLE = re.compile(FILE_DATE_STRING+r'\s+?'+FILE_TIME_STRING+r'\s+?(?:<DIR>|\d+?)\s+?', FLAGS)
+    DS_TYPE = re.compile(r'\bSAS-[XM]\b', FLAGS)
     '''
     TiMOS-B-4.0.R2
     TiMOS-B-5.0.R2
     TiMOS-B-7.0.R9
     TiMOS-B-7.0.R13
     '''
-    SW_VERSION = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b')
-    FREE_SPACE_SIZE = re.compile(r'\b(\d+?)\s+?bytes free\.')
-    DS_NAME = re.compile(r'ds\d+?-[0-9a-z]+\b')
+    SW_VERSION = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', FLAGS)
+    FREE_SPACE_SIZE = re.compile(r'\b(\d+?)\s+?bytes free\.', FLAGS)
+    DS_NAME = re.compile(r'ds\d-[0-9a-z]+\b', FLAGS)
 
 
 def print_for_ds(host, message):
     print "[{0}] : ".format(host + message)
 
 
-def extract(string, regexp, flags=re.IGNORECASE):
+def extract(string, regexp):
     try:
-        return regexp.findall(string, flags)[0]
+        return regexp.findall(string)[0]
     except IndexError as e:
         return ""
 
 
-def contains(string, regexp, flags=re.IGNORECASE):
-    if regexp.search(string, flags):
+def contains(string, regexp):
+    if regexp.search(string=string):
         return True
     else:
         return False
-
 
 def log_to_file(host, cause, state, log_file_name=None):
     """
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     secret = getpass.getpass('Password for DS:')
 
     ds_list = list(ds for ds in args if contains(ds, RE.DS_NAME))
-    RE.DS_NAME.search('ds1-zyt914').string()
+    print ds_list
     print "Start audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
     if len(ds_list) == 1: make_check(ds_list[0], user, secret)
     else:
