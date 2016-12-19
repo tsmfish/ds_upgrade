@@ -52,15 +52,15 @@ def print_for_ds(host, message):
     print "[{0}] : ".format(host + message)
 
 
-def extract(str, regexp, flags=re.IGNORECASE):
+def extract(string, regexp, flags=re.IGNORECASE):
     try:
-        return regexp.findall(str, flags)[0]
+        return regexp.findall(string, flags)[0]
     except IndexError as e:
         return ""
 
 
-def contains(str, regexp, flags=re.IGNORECASE):
-    if regexp.search(str, flags):
+def contains(string, regexp, flags=re.IGNORECASE):
+    if regexp.search(string, flags):
         return True
     else:
         return False
@@ -162,6 +162,7 @@ if __name__ == "__main__":
     secret = getpass.getpass('Password for DS:')
 
     ds_list = list(ds for ds in args if contains(ds, RE.DS_NAME))
+    RE.DS_NAME.search('ds1-zyt914').string()
     print "Start audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
     if len(ds_list) == 1: make_check(ds_list[0], user, secret)
     else:
