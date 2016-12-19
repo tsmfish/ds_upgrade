@@ -100,7 +100,7 @@ def make_check(host, user, password, log=None):
         answer = raw_input("Start check on {ds} (Y-yes/S-skip):".format(ds=host)).upper()
         if answer == 'S': return
 
-    if not log: log = "{date}_{host}".format(date=datetime.today().strftime(FILE_TIMESTAMP_FORMAT), ds=host)
+    if not log: log = "{date}_{ds}".format(date=datetime.today().strftime(FILE_TIMESTAMP_FORMAT), ds=host)
     ds = DS(host, user, password)
     try:
         ds.conn()
