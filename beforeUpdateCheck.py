@@ -4,7 +4,7 @@ import getpass
 import optparse
 import re
 import threading
-from datetime import date
+from datetime import datetime
 
 from DS_Class import DS
 
@@ -76,7 +76,7 @@ def log_to_file(host, cause, state, log_file_name=None):
     :return: none
     """
     if not log_file_name:
-        log_file_name = "%s_%s" % (date.today().strftime(FILE_TIMESTAMP_FORMAT), host)
+        log_file_name = "%s_%s" % (datetime.today().strftime(FILE_TIMESTAMP_FORMAT), host)
     log_file_name += "." + state.replace(" ", "_").upper()
     try:
         with open(log_file_name, 'a') as log_file:
@@ -161,10 +161,9 @@ if __name__ == "__main__":
     user = getpass.getuser()
     secret = getpass.getpass('Password for DS:')
 
-    ds_list = (ds for ds in args if contains(ds, RE.DS_NAME))
-
-    print "Start audit: {0}".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
-    if len(list(ds_list)) == 1: make_check(ds_list.next(), user, secret)
+    ds_list = list(ds for ds in args if contains(ds, RE.DS_NAME))
+    print "Start audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    if len(ds_list) == 1: make_check(ds_list[0], user, secret)
     else:
         threads = list()
         for ds in ds_list:
@@ -176,4 +175,4 @@ if __name__ == "__main__":
 
         for thread in threads: thread.join()
 
-    print "Finished audit: {0}".format(date.today().strftime(PRINT_TIMESTAMP_FORMAT))
+    print "Finished audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
