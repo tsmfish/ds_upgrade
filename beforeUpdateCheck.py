@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8
+import Queue
 import getpass
 import optparse
 import re
@@ -7,6 +8,7 @@ import threading
 from datetime import datetime
 
 from DS_Class import DS
+from ds_helper import RE, is_contains, extract, ds_print
 
 NAME, RESULT = 'name', 'result'
 FILE_TIMESTAMP_FORMAT = '%Y%m%d_%H%M%S'
@@ -29,43 +31,6 @@ class CAUSE:
     SKIPPED = "Check was skipped by user"
 
 
-class RE:
-    FLAGS = re.IGNORECASE
-    FILE_DATE_STRING = r'\b\d\d\/\d\d\/\d\d\d\d\b'
-    FILE_TIME_STRING = r'\b\d\d:\d\d[am]\b'
-    PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b', FLAGS)
-    FILE_DATE = re.compile(FILE_DATE_STRING)
-    FILE_TIME = re.compile(FILE_TIME_STRING)
-    DIR_FILE_PREAMBLE = re.compile(FILE_DATE_STRING+r'\s+?'+FILE_TIME_STRING+r'\s+?(?:<DIR>|\d+?)\s+?', FLAGS)
-    DS_TYPE = re.compile(r'\bSAS-[XM]\b', FLAGS)
-    '''
-    TiMOS-B-4.0.R2
-    TiMOS-B-5.0.R2
-    TiMOS-B-7.0.R9
-    TiMOS-B-7.0.R13
-    '''
-    SW_VERSION = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', FLAGS)
-    FREE_SPACE_SIZE = re.compile(r'\b(\d+?)\s+?bytes free\.', FLAGS)
-    DS_NAME = re.compile(r'ds\d-[0-9a-z]+\b', FLAGS)
-
-
-def print_for_ds(host, message):
-    print "[{0}] : ".format(host + message)
-
-
-def extract(string, regexp):
-    try:
-        return regexp.findall(string)[0]
-    except IndexError as e:
-        return ""
-
-
-def contains(string, regexp):
-    if regexp.search(string):
-        return True
-    else:
-        return False
-
 def log_to_file(host, cause, state, log_file_name=None):
     """
 
@@ -76,18 +41,19 @@ def log_to_file(host, cause, state, log_file_name=None):
     :return: none
     """
     if not log_file_name:
-        log_file_name = "%s_%s" % (datetime.today().strftime(FILE_TIMESTAMP_FORMAT), host)
+        log_file_name = "{date}_{host}".format(date=datetime.today().strftime(FILE_TIMESTAMP_FORMAT), host=host)
     log_file_name += "." + state.replace(" ", "_").upper()
+
     try:
         with open(log_file_name, 'a') as log_file:
             log_file.write("%s: " % (host, cause))
             log_file.close()
     except IOError as e:
-        print_for_ds(host, "Error write to log file.")
-        print_for_ds(host, e.message)
+        ds_print(host, "Error write to log file.")
+        ds_print(host, e.message)
     except OSError as e:
-        print_for_ds(host, "Error open log file.")
-        print_for_ds(host, e.message)
+        ds_print(host, "Error open log file.")
+        ds_print(host, e.message)
 
 
 def make_check(host, user, password, log=None):
@@ -100,13 +66,12 @@ def make_check(host, user, password, log=None):
         answer = raw_input("Start check on {ds} (Y-yes/S-skip):".format(ds=host)).upper()
         if answer == 'S': return
 
-    if not log: log = "{date}_{ds}".format(date=datetime.today().strftime(FILE_TIMESTAMP_FORMAT), ds=host)
     ds = DS(host, user, password)
     try:
         ds.conn()
     except Exception as e:
-        print_for_ds(host, "Cannot connect to %s" % host)
-        print_for_ds(host, e.message)
+        ds_print(host, "Cannot connect to %s" % host)
+        ds_print(host, e.message)
         log_to_file(host, STATE.PERMANENT, CAUSE.NO_CONNECTION, log)
         return
 
@@ -114,12 +79,12 @@ def make_check(host, user, password, log=None):
     print ds.send(b'show bof')
     print primary_bof_image
     if not primary_bof_image:
-        print_for_ds(host, "Primary image not found in BOF.")
+        ds_print(host, "Primary image not found in BOF.")
         log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_BOF, log)
         return
 
-    if not contains(ds.send(b'file dir ' + primary_bof_image), RE.DIR_FILE_PREAMBLE + primary_bof_image):
-        print_for_ds(host, "Primary image file [{0}] not found".format(primary_bof_image))
+    if not is_contains(ds.send(b'file dir ' + primary_bof_image), RE.DIR_FILE_PREAMBLE + primary_bof_image):
+        ds_print(host, "Primary image file [{0}] not found".format(primary_bof_image))
         log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_FILE, log)
         return
 
@@ -128,7 +93,7 @@ def make_check(host, user, password, log=None):
     primary_image_ds_type = extract(file_version, RE.DS_TYPE)
 
     if ds_type.lower() != primary_image_ds_type.lower():
-        print_for_ds(host, "DS type and primary image type does not match.")
+        ds_print(host, "DS type and primary image type does not match.")
         log_to_file(host, CAUSE.DS_TYPE_NOT_MATCH, STATE.PERMANENT, log)
         return
 
@@ -143,9 +108,9 @@ def make_check(host, user, password, log=None):
 
     free_space_size = int(extract(ds.send(b'file dir'), RE.FREE_SPACE_SIZE))
     if free_space_size < FREE_SPACE_LIMIT:
-        print_for_ds(host, "Has only {0} MB free space.".format(free_space_size / 1024 / 1024))
+        ds_print(host, "Has only {0} MB free space.".format(free_space_size / 1024 / 1024))
 
-    print_for_ds(host, "All clear.")
+    ds_print(host, "All clear.")
     log_to_file(host, """{host} - all clear.
 {primary_image} - primary image has type {primary_image_type}.
 {host} - {ds_type}. Has {free_space} MB free space.
@@ -164,7 +129,7 @@ if __name__ == "__main__":
     user = getpass.getuser()
     secret = getpass.getpass('Password for DS:')
 
-    ds_list = list(ds for ds in args if contains(ds, RE.DS_NAME))
+    ds_list = list(ds for ds in args if is_contains(ds, RE.DS_NAME))
     print ds_list
     print "Start audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
     if len(ds_list) == 1: make_check(ds_list[0], user, secret)

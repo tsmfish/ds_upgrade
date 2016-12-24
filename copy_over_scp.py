@@ -1,17 +1,18 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8
 
+import time
 import sys
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/ecdsa-0.13-py2.6.egg/')
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/requests-2.9.1-py2.6.egg')
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/paramiko-1.16.0-py2.6.egg')
 sys.path.insert(1, '/home/butko/.local/lib/python2.6/site-packages/scp-0.10.2-py2.6.egg/')
 
-import time
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 from scp import SCPClient
 
-WAIT_TIME = 10
+WAIT_TIME, RETRY_COUNT = 7, 5
+
 
 def scp_copy(ds, user, _password, what, where):
     """Function for recursive copy directory to ds
@@ -21,17 +22,16 @@ def scp_copy(ds, user, _password, what, where):
     """
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
-    for i in range(1, 5):
+    for i in range(RETRY_COUNT):
         try:
             ssh.connect(ds, username=user, password=str(_password), port=22, look_for_keys=False, allow_agent=False)
             break
         except AuthenticationException as e:
             # Try reconnect
-            print "Warning: can not conncet via SCP to {0}!".format(ds)
+            print "Warning: " + e.message
             time.sleep(WAIT_TIME)
     else:
         raise Exception('Fail to copy SW to DS')
 
     with SCPClient(ssh.get_transport()) as scp:
         scp.put(what, where, recursive=True)
-
