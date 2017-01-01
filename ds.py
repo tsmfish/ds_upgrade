@@ -3,6 +3,8 @@
 import base64
 import re
 import logging
+import threading
+import multiprocessing
 import time
 
 import sys
@@ -11,13 +13,15 @@ import sys
 # sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/paramiko-1.16.0-py2.6.egg')
 # sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/requests-2.9.1-py2.6.egg')
 # sys.path.insert(1, '/home/butko/.local/lib/python2.6/site-packages/scp-0.10.2-py2.6.egg/')
+
 import netmiko
+import paramiko
 from netmiko import NetMikoAuthenticationException
 from netmiko import NetMikoTimeoutException
 from scp import SCPClient, SCPException
 from netmiko.alcatel import AlcatelSrosSSH
 
-re_compile_class_name = re.compile(r'').__class__.__name__
+_re_compile_class_name = re.compile(r'').__class__.__name__
 
 def extract(regexp, text, flags=re.IGNORECASE):
     """
@@ -27,12 +31,12 @@ def extract(regexp, text, flags=re.IGNORECASE):
     :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: first occur regular expression
     """
-    if regexp.__class__.__name__ == re_compile_class_name:
+    assert(regexp.__class__.__name__ in [_re_compile_class_name, str.__name__])
+    if regexp.__class__.__name__ == _re_compile_class_name:
         return regexp.findall(text).pop()
-    elif regexp.__class__.__name__ == str.__name__:
+    if regexp.__class__.__name__ == str.__name__:
         return re.findall(regexp, text, flags).pop()
-    else:
-        return None
+    return ""
 
 
 def is_contains(regexp, text, flags=re.IGNORECASE):
@@ -43,17 +47,37 @@ def is_contains(regexp, text, flags=re.IGNORECASE):
     :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: True if string contains regular expression
     """
-    assert (regexp.__class__.__name__ in ['SRE_Pattern', str.__class__.__name__])
-    if regexp.__class__.__name__ == 'SRE_Pattern':
+    assert(regexp.__class__.__name__ in [_re_compile_class_name, str.__name__])
+
+    if regexp.__class__.__name__ == _re_compile_class_name:
         if regexp.search(text):
             return True
         else:
             return False
-    if regexp.__class__.__name__ == str.__class__.__name__:
+    if regexp.__class__.__name__ == str.__name__:
         if re.search(regexp, text, flags):
             return True
         else:
             return False
+
+
+def ds_print(ds, message, io_lock=None):
+    """
+    Thread safe printing with DS in start line.
+
+    :param ds:
+    :param message:
+    :param io_lock: object threading.Lock or threading.RLock
+    """
+
+    assert(not io_lock or (io_lock and
+           io_lock.__class__.__name__ in [threading.Lock().__class__.__name__,
+                                          threading.RLock().__class__.__name__,
+                                          multiprocessing.Lock().__class__.__name__,
+                                          multiprocessing.RLock().__class__.__name__]))
+    if io_lock: io_lock.acquire()
+    print "{ds} : {message}".format(ds=ds, message=message)
+    if io_lock: io_lock.release()
 
 
 class DS(AlcatelSrosSSH):
@@ -93,7 +117,6 @@ class DS(AlcatelSrosSSH):
     RETRY_COUNT = 5
     RETRY_DELAY = 7
 
-    # TODO fill commands
     _health_check_commands = [b'show system alarms',
                               b'show version',
                               b'show bof',
@@ -309,7 +332,7 @@ class DS(AlcatelSrosSSH):
 
     def file_delete(self, file, force=False):
         if self.file_is_exist(file):
-            if forced:
+            if force:
                 return self.send(b'file delete ' + file + b' force')
             else:
                 return self.send(b'file delete ' + file)
@@ -320,7 +343,7 @@ class DS(AlcatelSrosSSH):
         if self.file_is_exist(dir):
             if dir[-1] == '/': dir = dir[:-1]
             file_delete = self.file_delete(dir + '/*', True)
-            if forced:
+            if force:
                 return file_delete + self.send(b'file rd ' + dir + b' force')
             else:
                 return file_delete + self.send(b'file rd ' + dir)
