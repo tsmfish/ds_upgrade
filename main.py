@@ -11,7 +11,7 @@ import time
 
 from DS_Class import DS
 from copy_over_scp import scp_copy
-from ds_helper import RE, extract, is_contains
+from ds_helper import RE, extract
 
 COMPLETE, FATAL, PERMANENT = 'complete', 'fatal', 'permanent'
 NAME, RESULT = 'name', 'result'
