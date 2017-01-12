@@ -278,9 +278,10 @@ if __name__ == "__main__":
                 thread_result = result_queue.get()
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
-            if result[COMPLETE]: print "Complete on: " + " ".join(sorted(result[COMPLETE]))
-            if result[PERMANENT]: print "Permanent fault on: " + " ".join(sorted(result[PERMANENT]))
+            if result[COMPLETE]: print "\nComplete on: " + " ".join(sorted(result[COMPLETE]))
+            if result[PERMANENT]: print "\n\nPermanent fault on: " + " ".join(sorted(result[PERMANENT]))
             if result[FATAL]: print "Fatal error on: " + " ".join(sorted(result[FATAL]))
+            print "\n"
 
             if not result[PERMANENT]: break # finish try loading
             if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().upper() != 'Y':
