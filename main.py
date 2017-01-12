@@ -66,7 +66,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     i = DS(ds_name, user, password)
 
     # Connect and get basic inform
-    print_for_ds(ds_name, '\n' + '=' * 15 + ' Start process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n', io_lock)
+    print_for_ds(ds_name, '=' * 15 + ' Start process for \"{ds}\" '.format(ds=i.ip) + '=' * 15, io_lock)
 
     try:
         i.conn()
@@ -96,7 +96,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     print_for_ds(ds_name, '*** Write primary-image to secondary in bof file', io_lock)
     cmd = 'bof secondary-image {0}'.format(i.prime_image)
     print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
-    print_for_ds(ds_name, i.send(cmd), io_lock)
+    print_for_ds(ds_name, '*** {0}'.format(i.send(cmd)), io_lock)
     # print_for_ds(ds_name, i.send('show bof'))
 
     # Find old soft
@@ -218,7 +218,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
                      .format(primary_bof_image_version, TARGET_SW_VERSION), io_lock)
         result_queue.put({NAME: ds_name, RESULT: PERMANENT})
 
-    print_for_ds(ds_name, '\n' + '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n', io_lock)
+    print_for_ds(ds_name, '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15, io_lock)
     result_queue.put({NAME: ds_name, RESULT: COMPLETE})
 
 
