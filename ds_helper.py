@@ -66,7 +66,7 @@ def is_contains(regexp, text, flags=re.IGNORECASE):
             return False
 
 
-def ds_print(ds, message, io_lock=None):
+def ds_print(ds, message, io_lock=None, message_format="{0} : {1}"):
     """
     Thread safe printing with DS in start line.
 
@@ -78,7 +78,7 @@ def ds_print(ds, message, io_lock=None):
            io_lock.__class__.__name__ in [threading.Lock().__class__.__name__,
                                           threading.RLock().__class__.__name__])
     if io_lock: io_lock.acquire()
-    print "{ds} : {message}".format(ds=ds, message=message)
+    print "".format(ds, message)
     if io_lock: io_lock.release()
 
 
