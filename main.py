@@ -265,7 +265,7 @@ if __name__ == "__main__":
         result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
 
         while result[TEMPORARY]:
-            print "Start running: {0}".format(time.strftime("%H:%m:%s"))
+            print "Start running: {0}".format(time.strftime("%H:%m"))
             result_queue, threads = Queue(), list()
             for ds_name in result[TEMPORARY]:
                 thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
@@ -294,4 +294,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-        print "Finish running: {0}".format(time.strftime("%H:%m:%s"))
+        print "Finish running: {0}".format(time.strftime("%H:%m"))
