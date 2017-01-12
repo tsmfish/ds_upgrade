@@ -181,7 +181,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
 
     if i.check_verion(new_boot_file)[1] == i.hw_ver:
         # remove read only attribute
-        print_for_ds(ds_name, i.send('file attrib -r cf1:/boot.tim'), io_lock)
+        print_for_ds(ds_name, '*** {0}'.format(i.send('file attrib -r cf1:/boot.tim')), io_lock)
         cmd = 'file copy {0} cf1:/boot.tim force'.format(new_boot_file)
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
         # print_for_ds(ds_name, i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5))
