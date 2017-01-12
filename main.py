@@ -71,7 +71,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     try:
         i.conn()
     except Exception as e:
-        print_for_ds(ds_name, e.message, io_lock)
+        print_for_ds(ds_name, str(e), io_lock)
         result_queue.put({NAME: ds_name, RESULT: FATAL})
         return
 
@@ -151,7 +151,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     try:
         scp_copy(i.ip, i.user, i.password, new_SW[i.hw_ver], folder_for_SW)
     except Exception as e:
-        print_for_ds(ds_name, e.message)
+        print_for_ds(ds_name, str(e))
         result_queue.put({NAME: ds_name, RESULT: PERMANENT})
         return
 
@@ -278,9 +278,9 @@ if __name__ == "__main__":
                 thread_result = result_queue.get()
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
-            if result[COMPLETE]: print "Complete on: " + " ".join(result[COMPLETE])
-            if result[PERMANENT]: print "Permanent fault on: " + " ".join(result[PERMANENT])
-            if result[FATAL]: print "Fatal error on: " + " ".join(result[FATAL])
+            if result[COMPLETE]: print "Complete on: " + " ".join(sorted(result[COMPLETE]))
+            if result[PERMANENT]: print "Permanent fault on: " + " ".join(sorted(result[PERMANENT]))
+            if result[FATAL]: print "Fatal error on: " + " ".join(sorted(result[FATAL]))
 
             if not result[PERMANENT]: break # finish try loading
             if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().upper() != 'Y':
