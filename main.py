@@ -90,7 +90,8 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         else:
             print_for_ds(ds_name, '!!!! Problem with primary image', io_lock)
             print_for_ds(ds_name, '*** ' + i.prime_image, io_lock)
-
+            result_queue.put({NAME: ds_name, RESULT: FATAL})
+            return
 
     # Write primary image to secondary in bof
     print_for_ds(ds_name, '*** Write primary-image to secondary in bof file', io_lock)
@@ -117,6 +118,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         for f in files:
             # For beginning ask user for all deleting in future may be auto
             if io_lock: io_lock.acquire()
+            print "{0} : ...".format(ds_name)
             answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name, f))
             if io_lock: io_lock.release()
             if answer.lower() == 'y':
@@ -217,6 +219,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         print_for_ds(ds_name, 'boot.tim SW version: {0}, target script SW version: {1}'
                      .format(primary_bof_image_version, TARGET_SW_VERSION), io_lock)
         result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        return
 
     print_for_ds(ds_name, '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15, io_lock)
     result_queue.put({NAME: ds_name, RESULT: COMPLETE})

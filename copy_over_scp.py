@@ -1,8 +1,9 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8
 
-import time
 import sys
+import time
+
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/ecdsa-0.13-py2.6.egg/')
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/requests-2.9.1-py2.6.egg')
 sys.path.insert(1, '/home/erkki/.local/lib/python2.6/site-packages/paramiko-1.16.0-py2.6.egg')
@@ -28,7 +29,7 @@ def scp_copy(ds, user, _password, what, where):
             break
         except AuthenticationException as e:
             # Try reconnect
-            print "Warning: " + e.message
+            print "{0} : Warning: ".format(ds) + str(e)
             time.sleep(WAIT_TIME)
     else:
         raise Exception('Fail to copy SW to DS')
