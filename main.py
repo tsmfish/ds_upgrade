@@ -11,9 +11,10 @@ from Queue import Queue
 from DS_Class import DS
 from copy_over_scp import scp_copy
 
-COMPLETE, FATAL, PERMANENT = 'complete', 'fatal', 'permanent'
+COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 TARGET_SW_VERSION = 'TiMOS-B-7.0.R13'
+TARGET_SW_BOOT_VERSION = 'TiMOS-L-7.0.R13'
 
 new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
@@ -113,12 +114,11 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
 
 
     # Remove old SW
-    print_for_ds(ds_name, '*** Removing old SW')
+    print_for_ds(ds_name, '*** Removing old SW', io_lock)
     for files in (old_boots, old_both):
         for f in files:
             # For beginning ask user for all deleting in future may be auto
             if io_lock: io_lock.acquire()
-            print "{0} : ...".format(ds_name)
             answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name, f))
             if io_lock: io_lock.release()
             if answer.lower() == 'y':
@@ -138,7 +138,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     print_for_ds(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=i.ip), io_lock)
     if mb < 62:
         print_for_ds(ds_name, '!!! Not enough space for continue', io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     # Make image folder
@@ -153,8 +153,8 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     try:
         scp_copy(i.ip, i.user, i.password, new_SW[i.hw_ver], folder_for_SW)
     except Exception as e:
-        print_for_ds(ds_name, str(e))
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        print_for_ds(ds_name, str(e), io_lock)
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     # Check free space
@@ -166,11 +166,11 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     if i.check_verion(new_primary_img)[1] == i.hw_ver:
         cmd = 'bof primary-image {0}'.format(new_primary_img).replace('/', '\\')
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
-        print_for_ds(ds_name, i.send(cmd), io_lock)
+        print_for_ds(ds_name, '*** {0}'.format(i.send(cmd)), io_lock)
         # print_for_ds(ds_name, i.send('show bof'))
     else:
         print_for_ds(ds_name, '!!! New both.tim not from this platform', io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     # Save bof and config
@@ -190,7 +190,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
         print_for_ds(ds_name, '!!! New boot.tim not from this platform', io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     # after work check
@@ -201,7 +201,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     if primary_bof_image_type.lower() != ds_type.lower():
         print_for_ds(ds_name, 'Primary BOF type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
                      .format(primary_bof_image_type, ds_type), io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
     primary_bof_image_version = extract(sw_version_pattern, primary_bof_image_print)
     if primary_bof_image_version.lower() != TARGET_SW_VERSION.lower():
@@ -212,13 +212,13 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     if boot_tim_type.lower() != ds_type.lower():
         print_for_ds(ds_name, 'boot.tim type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
                      .format(primary_bof_image_type, ds_type), io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
     boot_tim_version = extract(sw_version_pattern, boot_tim_file_print)
-    if boot_tim_version.lower() != TARGET_SW_VERSION.lower():
+    if boot_tim_version.lower() != TARGET_SW_BOOT_VERSION.lower():
         print_for_ds(ds_name, 'boot.tim SW version: {0}, target script SW version: {1}'
-                     .format(primary_bof_image_version, TARGET_SW_VERSION), io_lock)
-        result_queue.put({NAME: ds_name, RESULT: PERMANENT})
+                     .format(boot_tim_version, TARGET_SW_VERSION), io_lock)
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     print_for_ds(ds_name, '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15, io_lock)
@@ -258,12 +258,12 @@ if __name__ == "__main__":
         update_ds(ds_list[0], user, secret, Queue())
     else:
         io_lock = threading.Lock()
-        result = {COMPLETE: list(), FATAL: list(), PERMANENT: ds_list}
+        result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
 
-        while result[PERMANENT]:
+        while result[TEMPORARY]:
             print "Start running: {0}".format(time.strftime("%H:%m:%s"))
             result_queue, threads = Queue(), list()
-            for ds_name in result[PERMANENT]:
+            for ds_name in result[TEMPORARY]:
                 thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
                                                                                 user,
                                                                                 secret,
@@ -275,19 +275,19 @@ if __name__ == "__main__":
             for thread in threads:
                 thread.join()
 
-            result = {COMPLETE: list(), FATAL: list(), PERMANENT: list()}
+            result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
 
             while not result_queue.empty():
                 thread_result = result_queue.get()
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
-            if result[COMPLETE]: print "\nComplete on: " + " ".join(sorted(result[COMPLETE]))
-            if result[PERMANENT]: print "\n\nPermanent fault on: " + " ".join(sorted(result[PERMANENT]))
-            if result[FATAL]: print "Fatal error on: " + " ".join(sorted(result[FATAL]))
+            if result[COMPLETE]:  print "\nComplete on         : " + " ".join(sorted(result[COMPLETE]))
+            if result[TEMPORARY]: print "\n\nTemporary fault on: " + " ".join(sorted(result[TEMPORARY]))
+            if result[FATAL]:     print "Fatal error on        : " + " ".join(sorted(result[FATAL]))
             print "\n"
 
-            if not result[PERMANENT]: break # finish try loading
-            if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().upper() != 'Y':
+            if not result[TEMPORARY]: break # finish try loading
+            if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
         print "Finish running: {0}".format(time.strftime("%H:%m:%s"))
