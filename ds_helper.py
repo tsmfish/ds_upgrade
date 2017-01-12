@@ -2,17 +2,15 @@
 # -*- coding: utf-8
 import re
 import threading
-import multiprocessing
+
 
 class RE:
     FLAGS = re.IGNORECASE
-    FILE_DATE_STRING = r'\b\d{2}\/\d{2}\/\d{4}\b'
-    FILE_TIME_STRING = r'\b\d{2}:\d{2}[ap]\b'
-
+    FILE_DATE_STRING = r'\b\d\d\/\d\d\/\d\d\d\d\b'
+    FILE_TIME_STRING = r'\b\d\d:\d\d[ap]\b'
     FILE_SIZE_PREAMBLE = FILE_DATE_STRING + r'\s+?' + FILE_TIME_STRING + r'\s+?(\d+?)\s+?'
     PRIMARY_BOF_IMAGE = re.compile(r'primary-image\s+?(\S+)\b', FLAGS)
     SECONDARY_BOF_IMAGE = re.compile(r'secondary-image\s+?(\S+)\b', FLAGS)
-    PRIMARY_CONFIG_FILE = re.compile(r'primary-config\s+?(\S+)\b', FLAGS)
     FILE_DATE = re.compile(FILE_DATE_STRING)
     FILE_TIME = re.compile(FILE_TIME_STRING)
     DIR_FILE_PREAMBLE = re.compile(FILE_DATE_STRING+r'\s+?'+FILE_TIME_STRING+r'\s+?(?:<DIR>|\d+?)\s+?', FLAGS)
@@ -28,9 +26,6 @@ class RE:
     DS_NAME = re.compile(r'\bds\d-[0-9a-z]+\b', FLAGS)
 
 
-_re_compile_class_name = re.compile(r'').__class__.__name__
-
-
 def extract(regexp, text, flags=re.IGNORECASE):
     """
 
@@ -40,14 +35,14 @@ def extract(regexp, text, flags=re.IGNORECASE):
     :return: first occur regular expression
     """
     try:
-        assert(regexp.__class__.__name__ in [_re_compile_class_name, str.__name__])
-        if regexp.__class__.__name__ == _re_compile_class_name:
-            return regexp.findall(text).pop()
-        if regexp.__class__.__name__ == str.__name__:
-            return re.findall(regexp, text, flags).pop()
-    except IndexError:
-        pass
-    return ""
+        if regexp.__class__.__name__ == 'SRE_Pattern':
+            return regexp.findall(text)[0]
+        elif regexp.__class__.__name__ == str.__name__:
+            return re.findall(regexp, text, flags)[0]
+        else:
+            return None
+    except IndexError as error:
+        return None
 
 
 def is_contains(regexp, text, flags=re.IGNORECASE):
@@ -58,14 +53,13 @@ def is_contains(regexp, text, flags=re.IGNORECASE):
     :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: True if string contains regular expression
     """
-    assert(regexp.__class__.__name__ in [_re_compile_class_name, str.__name__])
-
-    if regexp.__class__.__name__ == _re_compile_class_name:
+    assert(regexp.__class__.__name__ in ['SRE_Pattern', str.__class__.__name__])
+    if regexp.__class__.__name__ == 'SRE_Pattern':
         if regexp.search(text):
             return True
         else:
             return False
-    if regexp.__class__.__name__ == str.__name__:
+    if regexp.__class__.__name__ == str.__class__.__name__:
         if re.search(regexp, text, flags):
             return True
         else:
@@ -80,12 +74,9 @@ def ds_print(ds, message, io_lock=None):
     :param message:
     :param io_lock: object threading.Lock or threading.RLock
     """
-
-    assert(not io_lock or (io_lock and
+    assert(io_lock and
            io_lock.__class__.__name__ in [threading.Lock().__class__.__name__,
-                                          threading.RLock().__class__.__name__,
-                                          multiprocessing.Lock().__class__.__name__,
-                                          multiprocessing.RLock().__class__.__name__]))
+                                          threading.RLock().__class__.__name__])
     if io_lock: io_lock.acquire()
     print "{ds} : {message}".format(ds=ds, message=message)
     if io_lock: io_lock.release()
@@ -93,7 +84,7 @@ def ds_print(ds, message, io_lock=None):
 
 if __name__ == "__main__":
 
-    sample_text = r"""A:ds3-kha3# show version
+    sample_text = """A:ds3-kha3# show version
 TiMOS-B-7.0.R9 both/mpc ALCATEL SAS-M 7210 Copyright (c) 2000-2015 Alcatel-Lucent.
 All rights reserved. All use subject to applicable license agreements.
 Built on Thu Oct 15 08:11:18 IST 2015 by builder in /home/builder/7.0B1/R9/panos/main
@@ -173,25 +164,7 @@ A:ds3-kha3# logout"""
     print RE.DS_TYPE.findall(sample_text)
     print RE.PRIMARY_BOF_IMAGE.findall(sample_text)
     print RE.SECONDARY_BOF_IMAGE.findall(sample_text)
-    print RE.PRIMARY_CONFIG_FILE.findall(sample_text)
-    print RE.FILE_DATE.findall(sample_text)
-    print RE.FILE_TIME.findall(sample_text)
     print RE.DIR_FILE_PREAMBLE.findall(sample_text)
+    print extract(RE.FILE_SIZE_PREAMBLE, sample_text)
     print RE.FREE_SPACE_SIZE.findall(sample_text)
     print RE.SW_VERSION.findall(sample_text)
-
-    print extract(RE.FILE_SIZE_PREAMBLE, sample_text)
-    print extract(RE.FILE_SIZE_PREAMBLE, '')
-    print is_contains(RE.FILE_SIZE_PREAMBLE, sample_text)
-    print is_contains(RE.FILE_SIZE_PREAMBLE, '')
-
-    print extract(RE.DS_NAME, sample_text)
-    print extract(RE.DS_NAME, '')
-    print is_contains(RE.DS_NAME, sample_text)
-    print is_contains(RE.DS_NAME, '')
-
-    ds_print('none', 'Test: ' + threading.Lock().__class__.__name__, threading.Lock())
-    ds_print('none', 'Test: ' + threading.RLock().__class__.__name__, threading.RLock())
-    ds_print('none', 'Test: ' + multiprocessing.Lock().__class__.__name__, multiprocessing.Lock())
-    ds_print('none', 'Test: ' + multiprocessing.RLock().__class__.__name__, multiprocessing.RLock())
-    ds_print('none', 'Test: None', None)

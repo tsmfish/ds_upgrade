@@ -31,7 +31,7 @@ class CAUSE:
     SKIPPED = "Check was skipped by user"
 
 
-def log_to_file(host, cause, state, log_file_name=None, io_lock=None):
+def log_to_file(host, cause, state, log_file_name=None):
     """
 
     :param host:
@@ -49,45 +49,43 @@ def log_to_file(host, cause, state, log_file_name=None, io_lock=None):
             log_file.write("%s: " % (host, cause))
             log_file.close()
     except IOError as e:
-        ds_print(host, "Error write to log file.", io_lock)
-        ds_print(host, str(e), io_lock)
+        ds_print(host, "Error write to log file.")
+        ds_print(host, e.message)
     except OSError as e:
-        ds_print(host, "Error open log file.", io_lock)
-        ds_print(host, str(e), io_lock)
+        ds_print(host, "Error open log file.")
+        ds_print(host, e.message)
 
 
-def make_check(host, user, password, log=None, io_lock=None):
+def make_check(host, user, password, log=None):
     """
     Check primary-image form BOF: is value exist, is file exist, correct DS type in file, correct SW version in file
     """
 
     answer = ''
     while answer not in ('Y', 'S'):
-        if io_lock: io_lock.acquire()
         answer = raw_input("Start check on {ds} (Y-yes/S-skip):".format(ds=host)).upper()
-        if io_lock: io_lock.release()
         if answer == 'S': return
 
     ds = DS(host, user, password)
     try:
         ds.conn()
     except Exception as e:
-        ds_print(host, "Cannot connect to %s" % host, io_lock)
-        ds_print(host, str(e), io_lock)
-        log_to_file(host, STATE.PERMANENT, CAUSE.NO_CONNECTION, log, io_lock)
+        ds_print(host, "Cannot connect to %s" % host)
+        ds_print(host, e.message)
+        log_to_file(host, STATE.PERMANENT, CAUSE.NO_CONNECTION, log)
         return
 
     primary_bof_image = extract(ds.send(b'sow bof'), RE.PRIMARY_BOF_IMAGE)
-    ds_print(ds, ds.send(b'show bof'), io_lock)
-
+    print ds.send(b'show bof')
+    print primary_bof_image
     if not primary_bof_image:
-        ds_print(host, "Primary image not found in BOF.", io_lock)
-        log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_BOF, log, io_lock)
+        ds_print(host, "Primary image not found in BOF.")
+        log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_BOF, log)
         return
 
     if not is_contains(ds.send(b'file dir ' + primary_bof_image), RE.DIR_FILE_PREAMBLE + primary_bof_image):
-        ds_print(host, "Primary image file [{0}] not found".format(primary_bof_image), io_lock)
-        log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_FILE, log, io_lock)
+        ds_print(host, "Primary image file [{0}] not found".format(primary_bof_image))
+        log_to_file(host, CAUSE.NO_PRIMARY_IMAGE_FILE, log)
         return
 
     ds_type = extract(ds.send(b'show version'), RE.DS_TYPE)
@@ -95,26 +93,24 @@ def make_check(host, user, password, log=None, io_lock=None):
     primary_image_ds_type = extract(file_version, RE.DS_TYPE)
 
     if ds_type.lower() != primary_image_ds_type.lower():
-        ds_print(host, "DS type and primary image type does not match.", io_lock)
-        log_to_file(host, CAUSE.DS_TYPE_NOT_MATCH, STATE.PERMANENT, log, io_lock)
+        ds_print(host, "DS type and primary image type does not match.")
+        log_to_file(host, CAUSE.DS_TYPE_NOT_MATCH, STATE.PERMANENT, log)
         return
 
     sw_version_main_file = extract(file_version, RE.SW_VERSION)
     answer = 'C'
     while answer == 'C' and NEW_SW_VERSION.upper() != sw_version_main_file.upper():
         while answer not in ('S', 'C'):
-            if io_lock: io_lock.acquire()
             answer = raw_input('Primary file has version {sw_version} skip or check one more time (S-skip/C-check):'
                                .format(sw_version=sw_version_main_file)).upper()
-            if io_lock: io_lock.release()
         if answer == 'C':
             sw_version_main_file = extract(ds.send(b'file version ' + primary_bof_image), RE.SW_VERSION)
 
     free_space_size = int(extract(ds.send(b'file dir'), RE.FREE_SPACE_SIZE))
     if free_space_size < FREE_SPACE_LIMIT:
-        ds_print(host, "Has only {0} MB free space.".format(free_space_size / 1024 / 1024), io_lock)
+        ds_print(host, "Has only {0} MB free space.".format(free_space_size / 1024 / 1024))
 
-    ds_print(host, "All clear.", io_lock)
+    ds_print(host, "All clear.")
     log_to_file(host, """{host} - all clear.
 {primary_image} - primary image has type {primary_image_type}.
 {host} - {ds_type}. Has {free_space} MB free space.
@@ -122,7 +118,7 @@ def make_check(host, user, password, log=None, io_lock=None):
            primary_image=primary_bof_image,
            primary_image_type=primary_image_ds_type,
            ds_type=ds_type,
-           free_space=free_space_size), STATE.COMPLETE, log, io_lock)
+           free_space=free_space_size), STATE.COMPLETE, log)
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Check DS before upgrade', usage="usage: %prog ds_name ...")
@@ -136,17 +132,13 @@ if __name__ == "__main__":
     ds_list = list(ds for ds in args if is_contains(ds, RE.DS_NAME))
     print ds_list
     print "Start audit: {0}".format(datetime.today().strftime(PRINT_TIMESTAMP_FORMAT))
-    if len(ds_list) == 1: make_check(ds_list[0], user, secret, io_lock=None)
+    if len(ds_list) == 1: make_check(ds_list[0], user, secret)
     else:
         threads = list()
-        io_lock = threading.Lock()
         for ds in ds_list:
-            try:
-                thread = threading.Thread(target=make_check, name=ds, args=(ds, user, secret, None, io_lock))
-                thread.start()
-                threads.append(thread)
-            except Exception as e:
-                ds_print(ds, str(e), io_lock)
+            thread = threading.Thread(target=make_check, name=ds, args=(ds, user, secret))
+            thread.start()
+            threads.append(thread)
 
         for thread in threads: thread.join()
 
