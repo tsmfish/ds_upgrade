@@ -83,7 +83,7 @@ def update_ds(ds_name, user, password, result_queue):
     for files in (old_boots, old_both):
         for f in files:
             # For beginning ask user for all deleting in future may be auto
-            answer = raw_input("*** Delete {0} (y/n)? ".format(f))
+            answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name,f))
             if answer.lower() == 'y':
                 cmd = 'file delete {0} force'.format(f)
                 print_for_ds(ds_name, '*** ' + i.send(cmd))
@@ -186,6 +186,7 @@ def update_ds(ds_name, user, password, result_queue):
     print_for_ds(ds_name, '\n' + '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=i.ip) + '=' * 15 + '\n')
     result_queue.put({NAME: ds_name, RESULT: COMPLETE})
 
+
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Get config from DS\'s and move them to 1.140',
                                    usage="usage: %prog [file with ds list]")
@@ -194,10 +195,8 @@ if __name__ == "__main__":
     # parser.add_option( help='Path to file with list of ds', required=True)
 
     (options, args) = parser.parse_args()
-    if not options.ds_list_file_name or not args:
-        parser.error("Use [-f <ds list file> | ds ds ds ...]")
+    ds_list = list(ds for ds in args if is_contains(RE.DS_NAME,ds))
 
-    ds_list = args
     if options.ds_list_file_name:
         try:
             with open(options.ds_list_file_name) as ds_list_file:
@@ -206,6 +205,10 @@ if __name__ == "__main__":
         except IOError as e:
             print "Error while open file: {file}".format(file=options.ds_list_file_name)
             print e.message
+
+    if not ds_list:
+        parser.error("Use [-f <ds list file> | ds ds ds ...]")
+
 
     if len(ds_list) < 1:
         print "No ds found in arguments."
@@ -220,7 +223,7 @@ if __name__ == "__main__":
         result = {COMPLETE: list(), FATAL: list(), PERMANENT: ds_list}
 
         while result[PERMANENT]:
-            print "Start running: {time}".format(time.strftime("%H:%m:%s"))
+            print "Start running: {0}".format(time.strftime("%H:%m:%s"))
             result_queue, threads = Queue(), list()
             for ds_name in result[PERMANENT]:
                 thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name, user, secret, result_queue))
@@ -243,4 +246,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on permanent faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-        print "Finish running: {time}".format(time.strftime("%H:%m:%s"))
+        print "Finish running: {0}".format(time.strftime("%H:%m:%s"))

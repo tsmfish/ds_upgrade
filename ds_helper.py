@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8
 import re
-import threading
+from threading import Lock, RLock
 
 
 class RE:
@@ -26,7 +26,7 @@ class RE:
     DS_NAME = re.compile(r'\bds\d-[0-9a-z]+\b', FLAGS)
 
 
-def extract(regexp, text, flags=re.IGNORECASE):
+def extract(regexp, text):
     """
 
     :param regexp: regular expression
@@ -35,17 +35,12 @@ def extract(regexp, text, flags=re.IGNORECASE):
     :return: first occur regular expression
     """
     try:
-        if regexp.__class__.__name__ == 'SRE_Pattern':
-            return regexp.findall(text)[0]
-        elif regexp.__class__.__name__ == str.__name__:
-            return re.findall(regexp, text, flags)[0]
-        else:
-            return None
+        return re.findall(regexp, text).pop()
     except IndexError as error:
         return None
 
 
-def is_contains(regexp, text, flags=re.IGNORECASE):
+def is_contains(regexp, text):
     """
 
     :param regexp:
@@ -53,17 +48,10 @@ def is_contains(regexp, text, flags=re.IGNORECASE):
     :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: True if string contains regular expression
     """
-    assert(regexp.__class__.__name__ in ['SRE_Pattern', str.__class__.__name__])
-    if regexp.__class__.__name__ == 'SRE_Pattern':
-        if regexp.search(text):
-            return True
-        else:
-            return False
-    if regexp.__class__.__name__ == str.__class__.__name__:
-        if re.search(regexp, text, flags):
-            return True
-        else:
-            return False
+    if re.search(regexp, text):
+        return True
+    else:
+        return False
 
 
 def ds_print(ds, message, io_lock=None, message_format="{0} : {1}"):
@@ -74,11 +62,8 @@ def ds_print(ds, message, io_lock=None, message_format="{0} : {1}"):
     :param message:
     :param io_lock: object threading.Lock or threading.RLock
     """
-    assert(io_lock and
-           io_lock.__class__.__name__ in [threading.Lock().__class__.__name__,
-                                          threading.RLock().__class__.__name__])
     if io_lock: io_lock.acquire()
-    print "".format(ds, message)
+    print message_format.format(ds, message)
     if io_lock: io_lock.release()
 
 
@@ -168,3 +153,7 @@ A:ds3-kha3# logout"""
     print extract(RE.FILE_SIZE_PREAMBLE, sample_text)
     print RE.FREE_SPACE_SIZE.findall(sample_text)
     print RE.SW_VERSION.findall(sample_text)
+
+    ds_print('none', 'Test: ', Lock())
+    ds_print('none', 'Test: ', RLock())
+    ds_print('none', 'Test: None')
