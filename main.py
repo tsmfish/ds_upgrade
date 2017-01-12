@@ -16,7 +16,7 @@ COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 TARGET_SW_VERSION = 'TiMOS-B-7.0.R13'
 TARGET_SW_BOOT_VERSION = 'TiMOS-L-7.0.R13'
-RANDOM_WAIT_TIME = 10
+RANDOM_WAIT_TIME = 5
 
 new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
@@ -65,7 +65,7 @@ def extract(regexp, text):
 
 
 def update_ds(ds_name, user, password, result_queue, io_lock=None):
-    if io_lock: time.sleep(int(RANDOM_WAIT_TIME * random.random()))
+    if io_lock: time.sleep(RANDOM_WAIT_TIME * random.random())
 
     # Create object
     i = DS(ds_name, user, password)
