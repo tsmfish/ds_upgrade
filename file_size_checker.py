@@ -21,12 +21,12 @@ new_SW = {
 
 file_sizes = {
     'SAS-X': {
-        'boot.tim': 0,
-        'both.tim': 0
+        'boot.tim': 8430496,
+        'both.tim': 44336672
     },
     'SAS-M': {
-        'boot.tim': 0,
-        'both.tim': 0
+        'boot.tim': 7486880,
+        'both.tim': 43364928
     }
 }
 
