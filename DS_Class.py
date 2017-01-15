@@ -99,7 +99,7 @@ class DS(object):
             sw = DS._r_sw_ver.search(out)
             if hw:
                 if hw.group(0) != self.hw_ver:
-                    print('!!! File \"{file}\" from another platform ')
+                    print('!!! File \"{file}\" from another platform '.format(file=_file))
                 return sw.group(0), hw.group(0),
             return False
 
