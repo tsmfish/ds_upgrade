@@ -43,7 +43,7 @@ target_sw_version = 'TiMOS-B-7.0.R13'
 target_sw_boot_version = 'TiMOS-L-7.0.R13'
 random_wait_time = 5
 free_space_limit = 56
-file_size_pattern = r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?'
+file_size_pattern = re.compile(r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?')
 
 
 def print_for_ds(host, message, io_lock=None):
