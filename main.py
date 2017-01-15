@@ -15,33 +15,39 @@ from copy_over_scp import scp_copy
 COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 
+
 new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
     'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
 
-file_sizes = {
+file_sizes = { # should be STRING, for comparation with re.patern catched filed
     'SAS-X': {
-        'boot.tim': 8430496,
-        'both.tim': 44336672
+        'boot.tim': '8430496',
+        'both.tim': '44336672'
     },
     'SAS-M': {
-        'boot.tim': 7486880,
-        'both.tim': 43364928
+        'boot.tim': '7486880',
+        'both.tim': '43364928'
     }
 }
 
-folder_for_SW = 'images/TiMOS-7.0.R13'
-new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
-new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
+
 ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
-primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
 ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
-sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
-target_sw_version = 'TiMOS-B-7.0.R13'
-target_sw_boot_version = 'TiMOS-L-7.0.R13'
-random_wait_time = 5
-free_space_limit = 56
 file_size_pattern = r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?'
+sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
+
+folder_for_SW = 'images/TiMOS-7.0.R13'
+
+new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
+new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
+primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
+
+target_sw_boot_version = 'TiMOS-L-7.0.R13'
+target_sw_version = 'TiMOS-B-7.0.R13'
+
+free_space_limit = 56   # in Mbytes
+random_wait_time = 5    # in seconds
 
 
 def print_for_ds(host, message, io_lock=None):
