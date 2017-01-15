@@ -15,20 +15,22 @@ from copy_over_scp import scp_copy
 COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 
+
 new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
     'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
 
 file_sizes = {
     'SAS-X': {
-        'boot.tim': 8430496,
-        'both.tim': 44336672
+        'boot.tim': '8430496',
+        'both.tim': '44336672'
     },
     'SAS-M': {
-        'boot.tim': 7486880,
-        'both.tim': 43364928
+        'boot.tim': '7486880',
+        'both.tim': '43364928'
     }
 }
+
 
 folder_for_SW = 'images/TiMOS-7.0.R13'
 new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
