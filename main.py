@@ -79,9 +79,9 @@ def extract(regexp, text):
     :return: first occur regular expression
     """
     try:
-        return re.findall(regexp, text).pop()
-    except IndexError as error:
-        return None
+        return re.findall(regexp, text)[0]
+    except IndexError:
+        return ""
 
 
 def update_ds(ds_name, user, password, result_queue, io_lock=None):
@@ -288,7 +288,7 @@ if __name__ == "__main__":
                     ds_list.append(extract(ds_name_pattern, line))
         except IOError as e:
             print "Error while open file: {file}".format(file=options.ds_list_file_name)
-            print e.message
+            print str(e)
 
     if not ds_list:
         parser.error("Use [-f <ds list file> | ds ds ds ...]")
@@ -327,9 +327,9 @@ if __name__ == "__main__":
                 thread_result = result_queue.get()
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
-            if result[COMPLETE]:  print "\nComplete on         : " + " ".join(sorted(result[COMPLETE]))
-            if result[TEMPORARY]: print "\n\nTemporary fault on: " + " ".join(sorted(result[TEMPORARY]))
-            if result[FATAL]:     print "Fatal error on        : " + " ".join(sorted(result[FATAL]))
+            if result[COMPLETE]:  print   "\nComplete on       :" + " ".join(sorted(result[COMPLETE]))
+            if result[TEMPORARY]: print "\n\nTemporary fault on:" + " ".join(sorted(result[TEMPORARY]))
+            if result[FATAL]:     print     "Fatal error on    :" + " ".join(sorted(result[FATAL]))
             print "\n"
 
             if not result[TEMPORARY]: break # finish try loading
