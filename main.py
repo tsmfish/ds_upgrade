@@ -117,9 +117,31 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
             print_for_ds(ds_name, '*** ' + node.prime_image, io_lock)
             result_queue.put({NAME: ds_name, RESULT: FATAL})
             return
+
         if primary_img[0] != node.sw_ver:
-            print_for_ds(ds_name, '!!! Version of the bof primary-image is not current running sw.')
-            print_for_ds(ds_name, '!!! May be this switch already done!')
+            print_for_ds(ds_name, '!!! Version of the bof primary-image is {0} current running {1}.'
+                         .format(primary_img[0], node.sw_ver))
+            print_for_ds(ds_name, '!!! May be this switch already prepare for update!')
+
+            # check file sizes
+            ds_type = extract(ds_type_pattern, node.send(b'show version'))
+            primary_bof_image = extract(primary_bof_image_pattern, node.send(b'show bof'))
+            primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
+            if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
+                print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+                             .format(primary_bof_image, primary_bof_image_size), io_lock)
+            else:
+                print_for_ds(ds_name, '{0} file has correct size.'
+                             .format(primary_bof_image, primary_bof_image_size), io_lock)
+
+            boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
+            if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
+                print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+                             .format('boot.tim', boot_tim_file_size), io_lock)
+            else:
+                print_for_ds(ds_name, '{0} file has correct size.'
+                             .format(primary_bof_image, primary_bof_image_size), io_lock)
+
             result_queue.put({NAME: ds_name, RESULT: COMPLETE})
             return
 
@@ -143,7 +165,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
 
 
     # Remove old SW
-    print_for_ds(ds_name, '*** Removing old SW', io_lock)
+    print_for_ds(ds_name, '*** Removing old, not used SW', io_lock)
     for files in (old_boots, old_both):
         for f in files:
             # For beginning ask user for all deleting in future may be auto
