@@ -20,7 +20,7 @@ new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
     'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
 
-file_sizes = { # should be STRING, for comparation with re.patern catched filed
+file_sizes = {  # should be STRING, for comparision with re.pastern catches filed
     'SAS-X': {
         'boot.tim': '8430496',
         'both.tim': '44336672'
