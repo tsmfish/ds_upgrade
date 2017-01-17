@@ -84,7 +84,7 @@ def extract(regexp, text):
         return ""
 
 
-def update_ds(ds_name, user, password, result_queue, io_lock=None):
+def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force_delete=False):
     if io_lock: time.sleep(random_wait_time * random.random())
 
     # Create object
@@ -102,11 +102,7 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
 
     node.get_base_info()
 
-    # Get all files
-    # pprint_for_ds(ds_name, i.get_all_files())
-    # input()
-
-    # Check prim image
+    # Check primary image
     primary_img = node.check_verion(node.prime_image)
     if primary_img:
         if primary_img[1] == node.hw_ver:
@@ -150,35 +146,37 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     cmd = 'bof secondary-image {0}'.format(node.prime_image)
     print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
     print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock)
-    # print_for_ds(ds_name, i.send('show bof'))
 
     # Find old soft
     print_for_ds(ds_name, '*** Finding all sw in cf1:/...', io_lock)
     old_boots = node.find_files('boot.tim')
+
     try:
+        # remove from delete list file cf1:/boot.tim
         old_boots.remove('cf1:/boot.tim')
     except ValueError:
         print_for_ds(ds_name, '**! cf1:/boot.tim Not exist!', io_lock)
-		
-	try:
-		old_boots.remove(node.prime_image.replace('\\', '/').replace('boot.tim', 'both.tim')
-	except: ValueError:
-		pass
 
+    try:
+        # remove from delete list file <primary image BOF path>/boot.tim
+        old_boots.remove(node.prime_image.replace('\\', '/').replace('both.tim', 'boot.tim'))
+    except ValueError:
+        pass
 
     old_both = node.find_files('both.tim')
+    # remove from delete list file primary image BOF
     old_both.remove(node.prime_image.replace('\\', '/'))
-
 
     # Remove old SW
     print_for_ds(ds_name, '*** Removing old, not used SW', io_lock)
     for files in (old_boots, old_both):
         for f in files:
-            # For beginning ask user for all deleting in future may be auto
-            if io_lock: io_lock.acquire()
-            answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name, f))
-            if io_lock: io_lock.release()
-            if answer.lower() == 'y':
+            if not force_delete:
+                # For beginning ask user for deleting
+                if io_lock: io_lock.acquire()
+                answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name, f))
+                if io_lock: io_lock.release()
+            if force_delete or answer.lower() == 'y':
                 command_send_result = node.send('file delete {0} force'.format(f))
                 print_for_ds(ds_name, '*** ' + command_send_result, io_lock)
 
@@ -223,7 +221,6 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         cmd = 'bof primary-image {0}'.format(new_primary_img).replace('/', '\\')
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
         print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock)
-        # print_for_ds(ds_name, i.send('show bof'))
     else:
         print_for_ds(ds_name, '!!! New both.tim not from this platform', io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
@@ -242,7 +239,6 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
         print_for_ds(ds_name, '*** {0}'.format(command_send_result), io_lock)
         cmd = 'file copy {0} cf1:/boot.tim force'.format(new_boot_file)
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock)
-        # print_for_ds(ds_name, i.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5))
         node.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
         print_for_ds(ds_name, '!!! New boot.tim not from this platform', io_lock)
@@ -301,10 +297,12 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Get config from DS\'s and move them to 1.140',
-                                   usage="usage: %prog [-f <ds list file> | ds ds ds ...]")
+                                   usage="usage: %prog [-y] [-f <ds list file> | ds ds ds ...]")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with list DS", metavar="FILE")
-    # parser.add_option( help='Path to file with list of ds', required=True)
+    parser.add_option("-y", "--yes", dest="force_delete",
+                      help="force remove unused SW images (both/boot)",
+                      action="store_true", default=False)
 
     (options, args) = parser.parse_args()
     ds_list = list(ds for ds in args if is_contains(ds_name_pattern, ds))
@@ -329,7 +327,7 @@ if __name__ == "__main__":
     secret = getpass.getpass('Password for DS:')
 
     if len(ds_list) == 1:
-        update_ds(ds_list[0], user, secret, Queue())
+        update_ds(ds_list[0], user, secret)
     else:
         io_lock = threading.Lock()
         result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
@@ -342,7 +340,8 @@ if __name__ == "__main__":
                                                                                 user,
                                                                                 secret,
                                                                                 result_queue,
-                                                                                io_lock))
+                                                                                io_lock,
+                                                                                options.force_delete))
                 thread.start()
                 threads.append(thread)
 
