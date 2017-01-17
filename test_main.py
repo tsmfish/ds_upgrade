@@ -153,12 +153,14 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
     except ValueError:
         print_for_ds(ds_name, '**! cf1:/boot.tim Not exist!', io_lock)
 
-	print_for_ds(ds_name, node.prime_image.replace('\\', '/').replace('boot.tim', 'both.tim'), io_lock)
-	
-	try:
-		old_boots.remove(node.prime_image.replace('\\', '/').replace('boot.tim', 'both.tim')
-	except: ValueError:
-		pass
+    print_for_ds(ds_name, '!!! ' + node.prime_image, io_lock)
+    print_for_ds(ds_name, '!!! ' + node.prime_image.replace('\\', '/'), io_lock)
+    print_for_ds(ds_name, '!!! ' + node.prime_image.replace('\\', '/').replace('both.tim', 'boot.tim'), io_lock)
+
+    try:
+        old_boots.remove(node.prime_image.replace('\\', '/').replace('both.tim', 'boot.tim'))
+    except ValueError:
+        pass
 
     old_both = node.find_files('both.tim')
     old_both.remove(node.prime_image.replace('\\', '/'))
@@ -170,6 +172,8 @@ def update_ds(ds_name, user, password, result_queue, io_lock=None):
                 print_for_ds(ds_name, f, io_lock)
 
     # check file sizes
+    ds_type = extract(ds_type_pattern, node.send(b'show version'))
+    primary_bof_image = extract(primary_bof_image_pattern, node.send(b'show bof'))
     primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
     if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
         print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
