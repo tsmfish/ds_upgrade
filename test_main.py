@@ -114,8 +114,6 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     else:
         log_file_name = None
 
-    print_for_ds(ds_name, force_delete, io_lock, log_file_name)
-
     # Create object
     node = DS(ds_name, user, password)
 
@@ -123,6 +121,8 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     print_for_ds(ds_name, '=' * 15 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
                  io_lock,
                  log_file_name)
+
+    print_for_ds(ds_name, force_delete, io_lock, log_file_name)
 
     try:
         node.conn()
@@ -199,7 +199,7 @@ if __name__ == "__main__":
             if options.no_threads:
                 for ds_name in result[TEMPORARY]:
                     try:
-                        update_ds(ds_list[0],
+                        update_ds(ds_name,
                                   user,
                                   secret,
                                   result_queue=result_queue,

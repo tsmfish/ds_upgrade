@@ -435,7 +435,7 @@ if __name__ == "__main__":
             if options.no_threads:
                 for ds_name in result[TEMPORARY]:
                     try:
-                        update_ds(ds_list[0],
+                        update_ds(ds_name,
                                   user,
                                   secret,
                                   result_queue=result_queue,
