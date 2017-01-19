@@ -124,8 +124,8 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
 
     try:
         node.conn()
-    except Exception as e:
-        print_for_ds(ds_name, str(e), io_lock, log_file_name)
+    except Exception:
+        print_for_ds(ds_name, '\033[91m'+'Cannot connect'+'\033[0m', io_lock, log_file_name)
         post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
         return
 
@@ -472,9 +472,9 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            if result[COMPLETE]:  print   '\033[92m'+"\nComplete on       :" + " ".join(sorted(result[COMPLETE]))+'\033[0m'
-            if result[TEMPORARY]: print '\033[93m'+"\n\nTemporary fault on:" + " ".join(sorted(result[TEMPORARY]))+'\033[0m'
-            if result[FATAL]:     print     '\033[91m'+"Fatal error on    :" + " ".join(sorted(result[FATAL]))+'\033[0m'
+            if result[COMPLETE]:  print '\033[92m'+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+'\033[0m'
+            if result[TEMPORARY]: print   '\033[93m'+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+'\033[0m'
+            if result[FATAL]:     print   '\033[91m'+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+'\033[0m'
             print "\n"
 
             if not result[TEMPORARY]: break # finish try loading
