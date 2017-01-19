@@ -63,6 +63,7 @@ class DS(object):
 
         except NetMikoTimeoutException:
             logging.warning(u'Timeout, may be host {0} unreachable'.format(self.ip))
+            raise NetMikoAuthenticationException(self.ip)
         except NetMikoAuthenticationException:
             logging.warning(u'!!! Wrong password !!!!')
             print('!!! Wrong password !!!!')

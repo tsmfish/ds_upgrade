@@ -109,8 +109,8 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
             print_for_ds(ds_name, '*** Primary image good and has version {0}'.format(primary_img[0]), io_lock)
             print_for_ds(ds_name, '*** ' + node.prime_image, io_lock)
         else:
-            print_for_ds(ds_name, '!!!! Problem with primary image', io_lock)
-            print_for_ds(ds_name, '*** ' + node.prime_image, io_lock)
+            print_for_ds(ds_name, '!!! Problem with primary image', io_lock)
+            print_for_ds(ds_name, '**! ' + node.prime_image, io_lock)
             result_queue.put({NAME: ds_name, RESULT: FATAL})
             return
 
@@ -124,18 +124,18 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
             primary_bof_image = extract(primary_bof_image_pattern, node.send(b'show bof'))
             primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
             if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
-                print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+                print_for_ds(ds_name, '**! {0} file has size {1} and this is - WRONG!'
                              .format(primary_bof_image, primary_bof_image_size), io_lock)
             else:
-                print_for_ds(ds_name, '{0} file has correct size.'
+                print_for_ds(ds_name, '*** {0} file has correct size.'
                              .format(primary_bof_image, primary_bof_image_size), io_lock)
 
             boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
             if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
-                print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+                print_for_ds(ds_name, '**! {0} file has size {1} and this is - WRONG!'
                              .format('boot.tim', boot_tim_file_size), io_lock)
             else:
-                print_for_ds(ds_name, '{0} file has correct size.'
+                print_for_ds(ds_name, '*** {0} file has correct size.'
                              .format('boot.tim', boot_tim_file_size), io_lock)
 
             result_queue.put({NAME: ds_name, RESULT: COMPLETE})
@@ -257,27 +257,27 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     primary_bof_image_print = node.send(b'file version ' + primary_bof_image)
     primary_bof_image_type = extract(ds_type_pattern, primary_bof_image_print)
     if primary_bof_image_type.lower() != ds_type.lower():
-        print_for_ds(ds_name, 'Primary BOF type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
+        print_for_ds(ds_name, '!!! Primary BOF type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
                      .format(primary_bof_image_type, ds_type), io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     primary_bof_image_version = extract(sw_version_pattern, primary_bof_image_print)
     if primary_bof_image_version.lower() != target_sw_version.lower():
-        print_for_ds(ds_name, 'Primary BOF SW version: {0}, target script SW version: {1}'
+        print_for_ds(ds_name, '**! Primary BOF SW version: {0}, target script SW version: {1}'
                      .format(primary_bof_image_version, target_sw_version), io_lock)
 
     boot_tim_file_print = node.send(b'file version boot.tim')
     boot_tim_type = extract(ds_type_pattern, boot_tim_file_print)
     if boot_tim_type.lower() != ds_type.lower():
-        print_for_ds(ds_name, 'boot.tim type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
+        print_for_ds(ds_name, '!!! boot.tim type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
                      .format(boot_tim_type, ds_type), io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     boot_tim_version = extract(sw_version_pattern, boot_tim_file_print)
     if boot_tim_version.lower() != target_sw_boot_version.lower():
-        print_for_ds(ds_name, 'boot.tim SW version: {0}, target script SW version: {1}'
+        print_for_ds(ds_name, '**! boot.tim SW version: {0}, target script SW version: {1}'
                      .format(boot_tim_version, target_sw_boot_version), io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
@@ -285,14 +285,14 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     # check file sizes
     primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
     if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
-        print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+        print_for_ds(ds_name, '**! {0} file has size {1} and this is - WRONG!'
                      .format(primary_bof_image, primary_bof_image_size), io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
 
     boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
     if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
-        print_for_ds(ds_name, '{0} file has size {1} and this is - WRONG!'
+        print_for_ds(ds_name, '**! {0} file has size {1} and this is - WRONG!'
                      .format('boot.tim', boot_tim_file_size), io_lock)
         result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
         return
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     user = getpass.getuser()
     secret = getpass.getpass('Password for DS:')
 
-    print "Start running: {0}".format(time.strftime("%H:%m"))
+    print "Start running: {0}".format(time.strftime("%H:%m:%S"))
 
     if len(ds_list) == 1:
         update_ds(ds_list[0], user, secret, force_delete=options.force_delete)
@@ -387,4 +387,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-    print "Finish running: {0}".format(time.strftime("%H:%m"))
+    print "Finish running: {0}".format(time.strftime("%H:%m:%S"))
