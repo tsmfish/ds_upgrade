@@ -234,6 +234,10 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
+            result[COMPLETE].append(COMPLETE)
+            result[TEMPORARY].append(TEMPORARY)
+            result[FATAL].append(FATAL)
+
             if result[COMPLETE]:  print   '\033[92m'+"\nComplete on       :" + " ".join(sorted(result[COMPLETE])+'\033[0m')
             if result[TEMPORARY]: print '\033[93m'+"\n\nTemporary fault on:" + " ".join(sorted(result[TEMPORARY])+'\033[0m')
             if result[FATAL]:     print     '\033[91m'+"Fatal error on    :" + " ".join(sorted(result[FATAL])+'\033[0m')
