@@ -377,8 +377,8 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
 
 
 if __name__ == "__main__":
-    parser = optparse.OptionParser(description='Get config from DS\'s and move them to 1.140',
-                                   usage="usage: %prog [-y] [-n] [-l] [-f <ds list file> | ds ds ds ...]")
+    parser = optparse.OptionParser(description='Prepare DS upgrade SW to [{0}] version.'.format(target_sw_version),
+                                   usage="usage: %prog [-y] [-n] [-l] [-f <DS list file> | ds ds ds ...]")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
