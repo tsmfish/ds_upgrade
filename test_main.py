@@ -150,7 +150,7 @@ if __name__ == "__main__":
                       help="execute nodes one by one sequentially",
                       action="store_true", default=False)
     parser.add_option("-l", "--log-to-file", dest="log_to_file",
-                      help="enable logging to file yymmdd_hhmmss_ds_ds-name.log",
+                      help="enable logging to file yymmdd_hhmmss_ds-name.log",
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
