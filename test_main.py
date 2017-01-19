@@ -100,7 +100,7 @@ def post_result(result, queuq=None, log_file_name=None):
             with open(log_file_name, 'a') as log_file:
                 log_file.write("[{0}] : ***** result: {1} *****\n"
                                .format(result[NAME],
-                                       result[RESULT]))
+                                       result[RESULT].upper()))
                 log_file.close()
         except IOError:
             pass
