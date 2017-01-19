@@ -98,10 +98,9 @@ def post_result(result, queuq=None, log_file_name=None):
     if log_file_name:
         try:
             with open(log_file_name, 'a') as log_file:
-                log_file.write("\t{0} : ***** result: {1}, saved in file {2} *****"
+                log_file.write("[{0}] : ***** result: {1} *****\n"
                                .format(result[NAME],
-                                       result[RESULT],
-                                       log_file_name))
+                                       result[RESULT]))
                 log_file.close()
         except IOError:
             pass
