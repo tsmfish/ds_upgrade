@@ -136,7 +136,7 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
                              .format('boot.tim', boot_tim_file_size), io_lock)
             else:
                 print_for_ds(ds_name, '{0} file has correct size.'
-                             .format(primary_bof_image, primary_bof_image_size), io_lock)
+                             .format('boot.tim', boot_tim_file_size), io_lock)
 
             result_queue.put({NAME: ds_name, RESULT: COMPLETE})
             return
@@ -165,7 +165,13 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
 
     old_both = node.find_files('both.tim')
     # remove from delete list file primary image BOF
-    old_both.remove(node.prime_image.replace('\\', '/'))
+    try:
+        old_both.remove(node.prime_image.replace('\\', '/'))
+    except ValueError:
+        try:
+            old_both.remove(node.prime_image.replace('\\', '/')+"both.tim")
+        except ValueError:
+            print_for_ds(ds_name, '**! '+node.prime_image.replace('\\', '/')+"both.tim+"+' Not exist!', io_lock)
 
     # Remove old SW
     print_for_ds(ds_name, '*** Removing old, not used SW', io_lock)
@@ -327,7 +333,7 @@ if __name__ == "__main__":
     secret = getpass.getpass('Password for DS:')
 
     if len(ds_list) == 1:
-        update_ds(ds_list[0], user, secret)
+        update_ds(ds_list[0], user, secret, force_delete=options.force_delete)
     else:
         io_lock = threading.Lock()
         result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
