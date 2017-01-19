@@ -114,6 +114,8 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     else:
         log_file_name = None
 
+    print_for_ds(ds_name, force_delete, io_lock, log_file_name)
+
     # Create object
     node = DS(ds_name, user, password)
 
