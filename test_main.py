@@ -32,7 +32,7 @@ file_sizes = {  # should be STRING, for comparision with re.pastern catches file
 }
 
 
-ds_name_pattern = re.compile(r'(ds\d+?-[0-9a-z])+\b', re.IGNORECASE)
+ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
 ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
 file_size_pattern = re.compile(r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?')
 sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
@@ -155,7 +155,7 @@ if __name__ == "__main__":
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if is_contains(ds_name_pattern, ds))
+    ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
         try:
