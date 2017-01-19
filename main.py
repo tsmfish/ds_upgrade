@@ -441,8 +441,8 @@ if __name__ == "__main__":
                                   result_queue=result_queue,
                                   force_delete=options.force_delete,
                                   log_to_file=options.log_to_file)
-                    except Exception:
-                        print_for_ds(ds_name, "**! Unhandled exception")
+                    except Exception as e:
+                        print_for_ds(ds_name, "**! Unhandled exception " + str(e))
             else:
                 for ds_name in result[TEMPORARY]:
                     thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
