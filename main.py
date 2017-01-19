@@ -58,7 +58,7 @@ def print_for_ds(host, message, io_lock=None, log_file_name=None):
     if log_file_name:
         try:
             with open(log_file_name, 'a') as log_file:
-                log_file.write("[{0}] : {1}".format(host, message))
+                log_file.write("[{0}] : {1}\n".format(host, message))
                 log_file.close()
         except IOError:
             pass
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     user = getpass.getuser()
     secret = getpass.getpass('Password for DS:')
 
-    print "Start running: {0}".format(time.strftime("%H:%M:%S"))
+    print '\033[94m'+"Start running: {0}".format(time.strftime("%H:%M:%S"))+'\033[0m'
 
     if len(ds_list) == 1:
         update_ds(ds_list[0],
@@ -481,4 +481,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-    print "Finish running: {0}".format(time.strftime("%H:%M:%S"))
+    print '\033[94m'+"Finish running: {0}".format(time.strftime("%H:%M:%S"))+'\033[0m'
