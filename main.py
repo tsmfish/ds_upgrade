@@ -59,7 +59,7 @@ def print_for_ds(host, message, io_lock=None, log_file_name=None):
         try:
             with open(log_file_name, 'a') as log_file:
                 log_file.write("[{0}] : {1}".format(host, message))
-                log_file.file.close()
+                log_file.close()
         except IOError:
             pass
 
