@@ -309,18 +309,23 @@ if __name__ == "__main__":
     parser.add_option("-y", "--yes", dest="force_delete",
                       help="force remove unused SW images (both/boot)",
                       action="store_true", default=False)
+    parser.add_option("-n", "--no-thread", dest="no_threads",
+                      help="execute nodes one by one sequentially",
+                      action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    ds_list = list(ds for ds in args if is_contains(ds_name_pattern, ds))
+    ds_list_raw = list(ds for ds in args if is_contains(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
         try:
             with open(options.ds_list_file_name) as ds_list_file:
                 for line in ds_list_file.readlines():
-                    ds_list.append(extract(ds_name_pattern, line))
+                    ds_list_raw.append(extract(ds_name_pattern, line))
         except IOError as e:
             print "Error while open file: {file}".format(file=options.ds_list_file_name)
             print str(e)
+
+    ds_list = list(set(ds_list_raw))
 
     if not ds_list:
         parser.error("Use %prog [-f <ds list file> | ds ds ds ...]")
@@ -332,6 +337,8 @@ if __name__ == "__main__":
     user = getpass.getuser()
     secret = getpass.getpass('Password for DS:')
 
+    print "Start running: {0}".format(time.strftime("%H:%m"))
+
     if len(ds_list) == 1:
         update_ds(ds_list[0], user, secret, force_delete=options.force_delete)
     else:
@@ -339,26 +346,37 @@ if __name__ == "__main__":
         result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
 
         while result[TEMPORARY]:
-            print "Start running: {0}".format(time.strftime("%H:%m"))
-            result_queue, threads = Queue(), list()
-            for ds_name in result[TEMPORARY]:
-                thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
-                                                                                user,
-                                                                                secret,
-                                                                                result_queue,
-                                                                                io_lock,
-                                                                                options.force_delete))
-                thread.start()
-                threads.append(thread)
 
-            for thread in threads:
-                thread.join()
+            result_queue, threads = Queue(), list()
+
+            if options.no_threads:
+                for ds_name in result[TEMPORARY]:
+                    try:
+                        update_ds(ds_list[0], user, secret, result_queue=result_queue, force_delete=options.force_delete)
+                    except Exception:
+                        print_for_ds(ds_name, "**! Unhandled exception")
+            else:
+                for ds_name in result[TEMPORARY]:
+                    thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
+                                                                                    user,
+                                                                                    secret,
+                                                                                    result_queue,
+                                                                                    io_lock,
+                                                                                    options.force_delete))
+                    thread.start()
+                    threads.append(thread)
+
+                for thread in threads:
+                    thread.join()
 
             result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
 
             while not result_queue.empty():
                 thread_result = result_queue.get()
                 result[thread_result[RESULT]].append(thread_result[NAME])
+
+            for ds_name in (ds for ds in ds_list if ds not in (result[COMPLETE], result[TEMPORARY], result[FATAL])):
+                result[FATAL].append(ds_name)
 
             if result[COMPLETE]:  print   "\nComplete on       :" + " ".join(sorted(result[COMPLETE]))
             if result[TEMPORARY]: print "\n\nTemporary fault on:" + " ".join(sorted(result[TEMPORARY]))
@@ -369,4 +387,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-        print "Finish running: {0}".format(time.strftime("%H:%m"))
+    print "Finish running: {0}".format(time.strftime("%H:%m"))
