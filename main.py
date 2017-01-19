@@ -378,9 +378,9 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Get config from DS\'s and move them to 1.140',
-                                   usage="usage: %prog [-y] [-f <ds list file> | ds ds ds ...]")
+                                   usage="usage: %prog [-y] [-n] [-l] [-f <ds list file> | ds ds ds ...]")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
-                      help="file with list DS", metavar="FILE")
+                      help="file with DS list", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
                       help="force remove unused SW images (both/boot)",
                       action="store_true", default=False)
@@ -406,7 +406,8 @@ if __name__ == "__main__":
     ds_list = list(set(ds_list_raw))
 
     if not ds_list:
-        parser.error("Use %prog [-f <ds list file> | ds ds ds ...]")
+        parser.print_help()
+        exit()
 
     if len(ds_list) < 1:
         print "No ds found in arguments."
