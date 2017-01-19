@@ -117,18 +117,25 @@ def update_ds(ds_name, user, password, result_queue=Queue(), io_lock=None, force
     node = DS(ds_name, user, password)
 
     # Connect and get basic inform
-    print_for_ds(ds_name, '=' * 15 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
+    print_for_ds(ds_name,
+                 '=' * 15 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
                  io_lock,
                  log_file_name)
 
     try:
         node.conn()
     except Exception:
-        print_for_ds(ds_name, '\033[91m'+'Cannot connect'+'\033[0m', io_lock, log_file_name)
+        print_for_ds(ds_name, '\033[91m'+'Cannot connect!'+'\033[0m', io_lock, log_file_name)
         post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
         return
 
     node.get_base_info()
+
+    # Check node SW version
+    if node.sw_ver.lower() == target_sw_version.lower():
+        print_for_ds(ds_name, "*** Running SW version already \"{0}\"".format(node.sw_ver), io_lock, log_file_name)
+        post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
+        return
 
     # Check primary image
     primary_img = node.check_verion(node.prime_image)
