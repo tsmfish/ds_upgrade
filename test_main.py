@@ -450,8 +450,8 @@ if __name__ == "__main__":
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
             else:
-                result[COMPLETE].append(COMPLETE)
-                result[TEMPORARY].append(TEMPORARY)
+                result_queue.put({RESULT: COMPLETE, NAME: COMPLETE})
+                result_queue.put({RESULT: TEMPORARY, NAME: TEMPORARY})
 
             result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
 
