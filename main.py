@@ -471,7 +471,7 @@ if __name__ == "__main__":
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
             # determinate ds with unhandled error and mark it as FATAL
-            for ds_name in (ds for ds in ds_list if ds not in list(result[COMPLETE], result[TEMPORARY], result[FATAL])):
+            for ds_name in (ds for ds in ds_list if ds not in list((result[COMPLETE], result[TEMPORARY], result[FATAL]))):
                 result[FATAL].append(ds_name)
                 if options.log_to_file:
                     post_result({NAME: ds_name, RESULT: FATAL},
@@ -483,7 +483,7 @@ if __name__ == "__main__":
             if result[FATAL]:     print   '\033[91m'+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+'\033[0m'
             print "\n"
 
-            if not result[TEMPORARY]: break # finish try loading
+            if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
