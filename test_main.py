@@ -460,7 +460,7 @@ if __name__ == "__main__":
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
             # determinate ds with unhandled error and mark it as FATAL
-            for ds_name in (ds for ds in ds_list if ds not in list(result[COMPLETE], result[TEMPORARY], result[FATAL])):
+            for ds_name in (ds for ds in ds_list if ds not in list((result[COMPLETE], result[TEMPORARY], result[FATAL]))):
                 result[FATAL].append(ds_name)
                 if options.log_to_file:
                     post_result({NAME: ds_name, RESULT: FATAL},
