@@ -450,19 +450,8 @@ if __name__ == "__main__":
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
             else:
-                for ds_name in result[TEMPORARY]:
-                    thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
-                                                                                    user,
-                                                                                    secret,
-                                                                                    result_queue,
-                                                                                    io_lock,
-                                                                                    options.force_delete,
-                                                                                    options.log_to_file))
-                    thread.start()
-                    threads.append(thread)
-
-                for thread in threads:
-                    thread.join()
+                result[COMPLETE].append(COMPLETE)
+                result[TEMPORARY].append(TEMPORARY)
 
             result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
 
