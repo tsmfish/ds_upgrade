@@ -31,6 +31,20 @@ file_sizes = {  # should be STRING, for comparision with re.pastern catches file
     }
 }
 
+print_strings = (
+    'environment no more'
+    'show system alarms'
+    'show version'
+    'show bof'
+    'file dir'
+    'show port'
+    'show card state'
+    'show service sdp-using'
+    'show router interface'
+    'show system ntp'
+    'show system ptp'
+    'show system security ssh'
+)
 
 ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
 ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
@@ -171,7 +185,10 @@ def update_ds(ds_name,
     else:
         log_file_name = None
 
-    print_for_ds(ds_name, ds_name, io_lock, log_file_name, color)
+    for string in print_strings:
+        print_for_ds(ds_name, string, io_lock, log_file_name, color)
+        time.sleep(random.random()*10)
+
     result_queue.put({NAME: ds_name, RESULT: COMPLETE})
     return
 
@@ -580,9 +597,9 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            if result[COMPLETE]:  print '\033[92m'+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+'\033[0m'
-            if result[TEMPORARY]: print   '\033[93m'+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+'\033[0m'
-            if result[FATAL]:     print   '\033[91m'+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+'\033[0m'
+            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+COLORS.end
+            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+COLORS.end
+            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':

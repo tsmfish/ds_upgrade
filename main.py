@@ -575,12 +575,12 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            if result[COMPLETE]:  print '\033[92m'+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+'\033[0m'
-            if result[TEMPORARY]: print   '\033[93m'+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+'\033[0m'
-            if result[FATAL]:     print   '\033[91m'+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+'\033[0m'
+            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+COLORS.end
+            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+COLORS.end
+            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-    print COLORS.info+"Finish running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
+    print COLORS.info+"\nFinish running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
