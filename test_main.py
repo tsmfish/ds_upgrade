@@ -95,8 +95,8 @@ class COLORS:
     colors = [white, green, yellow, blue, magenta, cyan, black]
 
     warning = yellow
-    fatal = red
-    error = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
+    fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
+    error = red
     ok = green
     info = cyan
 
@@ -170,6 +170,10 @@ def update_ds(ds_name,
         log_file_name = time.strftime(log_file_format.format(ds_name=ds_name))
     else:
         log_file_name = None
+
+    print_for_ds(ds_name, ds_name, io_lock, log_file_name, color)
+    result_queue.put({NAME: ds_name, RESULT: COMPLETE})
+    return
 
     # Create object
     node = DS(ds_name, user, password)
@@ -480,8 +484,7 @@ if __name__ == "__main__":
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    args = ['ds1-kha3', 'ds2-kha3', 'ds3-kha3', 'ds4-kha3']
-
+    args = ['ds0-kha3','ds1-kha3','ds2-kha3','ds3-kha3','ds4-kha3','ds5-kha3','ds6-kha3','ds7-kha3','ds8-kha3','ds9-kha3',]
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
@@ -524,14 +527,37 @@ if __name__ == "__main__":
             result_queue, threads = Queue(), list()
 
             if options.no_threads:
-                result_queue.put({RESULT: COMPLETE, NAME: args[0]})
-                result_queue.put({RESULT: TEMPORARY, NAME: args[1]})
-                result_queue.put({RESULT: FATAL, NAME: args[2]})
+                for ds_name in result[TEMPORARY]:
+                    try:
+                        update_ds(ds_name,
+                                  user,
+                                  secret,
+                                  result_queue=result_queue,
+                                  force_delete=options.force_delete,
+                                  log_to_file=options.log_to_file,
+                                  color=COLORS.colors[colorIndex])
+                    except Exception as e:
+                        print_for_ds(ds_name, "**! Unhandled exception " + str(e))
+                        result_queue.put({RESULT: FATAL, NAME: ds_name})
 
+                    # colorIndex = (colorIndex + 1) % len(COLORS.colors)
             else:
-                result_queue.put({RESULT: COMPLETE, NAME: args[0]})
-                result_queue.put({RESULT: TEMPORARY, NAME: args[1]})
-                result_queue.put({RESULT: FATAL, NAME: args[2]})
+                for ds_name in result[TEMPORARY]:
+                    thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
+                                                                                    user,
+                                                                                    secret,
+                                                                                    result_queue,
+                                                                                    io_lock,
+                                                                                    options.force_delete,
+                                                                                    options.log_to_file,
+                                                                                    COLORS.colors[colorIndex]))
+                    thread.start()
+                    threads.append(thread)
+
+                    colorIndex = (colorIndex + 1) % len(COLORS.colors)
+
+                for thread in threads:
+                    thread.join()
 
             result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
 
