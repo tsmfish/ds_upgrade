@@ -186,11 +186,26 @@ def update_ds(ds_name,
     else:
         log_file_name = None
 
+    print_for_ds(ds_name,
+                 '=' * 8 + ' Start process for \"{ds}\" '.format(ds=ds_name) + '=' * 8,
+                 io_lock,
+                 log_file_name,
+                 COLORS.ok)
+
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
         time.sleep(random.random()*10)
 
-    result_queue.put({NAME: ds_name, RESULT: COMPLETE})
+    print_for_ds(ds_name,
+                 '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=ds_name) + '=' * 8,
+                 io_lock,
+                 log_file_name,
+                 COLORS.ok)
+
+    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: COMPLETE})
+    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
+    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: FATAL})
+
     return
 
     # Create object
@@ -200,7 +215,8 @@ def update_ds(ds_name,
     print_for_ds(ds_name,
                  '=' * 8 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
                  io_lock,
-                 log_file_name)
+                 log_file_name,
+                 color)
 
     try:
         node.conn()
@@ -482,7 +498,7 @@ def update_ds(ds_name,
                  '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
-                 COLORS.white)
+                 COLORS.ok)
     post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
 
 
@@ -527,8 +543,16 @@ if __name__ == "__main__":
         print COLORS.error+"No ds found in arguments."+COLORS.end
         exit()
 
+    for fg in range(30, 38):
+        string = ''
+        for bg in range(40, 48):
+            string += COLORS.colored.format(style=COLORS.STYLE.normal,
+                                            foreground=fg,
+                                            backgrounf=bg) + " {0};{1} ".format(fg, bg) + COLORS.end
+        print string
+
     user = getpass.getuser()
-    secret = getpass.getpass('Password for DS:')
+    secret = '' #  getpass.getpass('Password for DS:')
 
     print COLORS.info+"Start running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
 

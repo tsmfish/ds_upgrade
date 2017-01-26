@@ -184,7 +184,8 @@ def update_ds(ds_name,
     print_for_ds(ds_name,
                  '=' * 15 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
                  io_lock,
-                 log_file_name)
+                 log_file_name,
+                 color)
 
     try:
         node.conn()
@@ -466,7 +467,7 @@ def update_ds(ds_name,
                  '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
                  io_lock,
                  log_file_name,
-                 COLORS.white)
+                 COLORS.ok)
     post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
 
 
