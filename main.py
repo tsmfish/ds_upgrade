@@ -543,7 +543,7 @@ if __name__ == "__main__":
             result_queue, threads = Queue(), list()
 
             if options.no_threads:
-                for ds_name in result[TEMPORARY]:
+                for ds_name in sorted(result[TEMPORARY]):
                     if ds_name not in ds_colors:
                         ds_colors[ds_name] = COLORS.colors[colorIndex]
                     try:
@@ -625,7 +625,7 @@ if __name__ == "__main__":
             if result[FATAL]:     print   COLORS.fatal + "Fatal error on    : " + line_fatal + COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
-            if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
+            if raw_input("\nRepeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S")) + COLORS.end
