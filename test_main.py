@@ -548,7 +548,7 @@ if __name__ == "__main__":
         for bg in range(40, 48):
             string += COLORS.colored.format(style=COLORS.STYLE.normal,
                                             foreground=fg,
-                                            backgrounf=bg) + " {0};{1} ".format(fg, bg) + COLORS.end
+                                            background=bg) + " {0};{1} ".format(fg, bg) + COLORS.end
         print string
 
     user = getpass.getuser()
