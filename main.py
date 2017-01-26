@@ -471,6 +471,8 @@ if __name__ == "__main__":
                                   color=COLORS.colors[colorIndex])
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
+                        result_queue.put({RESULT: FATAL, NAME: ds_name})
+
                     colorIndex = (colorIndex + 1) % len(COLORS.colors)
             else:
                 for ds_name in result[TEMPORARY]:
@@ -497,7 +499,14 @@ if __name__ == "__main__":
                 result[thread_result[RESULT]].append(thread_result[NAME])
 
             # determinate ds with unhandled error and mark it as FATAL
-            for ds_name in (ds for ds in ds_list if ds not in list((result[COMPLETE], result[TEMPORARY], result[FATAL]))):
+            unhandled_ds = list()
+            for ds_name in ds_list:
+                if ds_name not in result[COMPLETE] and \
+                                ds_name not in result[TEMPORARY] and \
+                                ds_name not in result[FATAL]:
+                    unhandled_ds.append(ds_name)
+
+            for ds_name in unhandled_ds:
                 result[FATAL].append(ds_name)
                 if options.log_to_file:
                     post_result({NAME: ds_name, RESULT: FATAL},
