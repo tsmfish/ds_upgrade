@@ -120,7 +120,7 @@ class COLORS:
               ]
 
     warning = yellow
-    fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
+    fatal = colored.format(style=STYLE.normal, foreground=FOREGROUND.black, background=BACKGROUND.red)
     error = red
     ok = green
     info = cyan
