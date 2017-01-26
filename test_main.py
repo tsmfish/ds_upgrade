@@ -652,17 +652,17 @@ if __name__ == "__main__":
 
             for ds in sorted(result[COMPLETE]):
                 if options.colorize:
-                    line_complete += ds_colors[ds] + ds + COLORS.end + " "
+                    line_complete += ds_colors[ds] + ds + " "
                 else:
                     line_complete += ds + " "
             for ds in sorted(result[TEMPORARY]):
                 if options.colorize:
-                    line_temporary += ds_colors[ds] + ds + COLORS.end + " "
+                    line_temporary += ds_colors[ds] + ds + " "
                 else:
                     line_temporary += ds + " "
             for ds in sorted(result[FATAL]):
                 if options.colorize:
-                    line_fatal += ds_colors[ds] + ds + COLORS.end + " "
+                    line_fatal += ds_colors[ds] + ds + " "
                 else:
                     line_fatal += ds + " "
 

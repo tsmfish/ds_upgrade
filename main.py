@@ -98,7 +98,17 @@ class COLORS:
     cyan    = colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan   , background=BACKGROUND.black)
     white   = colored.format(style=STYLE.normal, foreground=FOREGROUND.white  , background=BACKGROUND.black)
 
-    colors = [white, green, yellow, black, magenta, cyan]
+    colors = [white,
+              cyan,
+              green,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.cyan),
+              yellow,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.green),
+              magenta,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan, background=BACKGROUND.blue),
+              black,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.yellow),
+              ]
 
     warning = yellow
     fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
@@ -182,7 +192,7 @@ def update_ds(ds_name,
 
     # Connect and get basic inform
     print_for_ds(ds_name,
-                 '=' * 15 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
+                 '=' * 8 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  color)
@@ -464,7 +474,7 @@ def update_ds(ds_name,
         return
 
     print_for_ds(ds_name,
-                 '=' * 15 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 15,
+                 '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  COLORS.ok)
@@ -595,17 +605,17 @@ if __name__ == "__main__":
 
             for ds in sorted(result[COMPLETE]):
                 if options.colorize:
-                    line_complete += ds_colors[ds] + ds + COLORS.end + " "
+                    line_complete += ds_colors[ds] + ds + " "
                 else:
                     line_complete += ds + " "
             for ds in sorted(result[TEMPORARY]):
                 if options.colorize:
-                    line_temporary += ds_colors[ds] + ds + COLORS.end + " "
+                    line_temporary += ds_colors[ds] + ds + " "
                 else:
                     line_temporary += ds + " "
             for ds in sorted(result[FATAL]):
                 if options.colorize:
-                    line_fatal += ds_colors[ds] + ds + COLORS.end + " "
+                    line_fatal += ds_colors[ds] + ds + " "
                 else:
                     line_fatal += ds + " "
 
