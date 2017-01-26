@@ -15,16 +15,16 @@ from copy_over_scp import scp_copy
 
 class COLORS:
     end = "\x1b[0m"
-    red     = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=30, background=40)
-    green   = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=31, background=40)
-    yellow  = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=32, background=40)
-    blue    = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=33, background=40)
-    magenta = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=34, background=40)
-    cyan    = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=35, background=40)
-    white   = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=36, background=40)
-    gray    = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=37, background=40)
+    black   = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=30, background=47)
+    red     = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=31, background=40)
+    green   = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=32, background=40)
+    yellow  = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=33, background=40)
+    blue    = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=34, background=40)
+    magenta = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=35, background=40)
+    cyan    = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=36, background=40)
+    white   = '\x1b[{style};{foreground};{background}m'.format(style=0, foreground=37, background=40)
 
-    colors = [red, green, yellow, blue, magenta, cyan, white, gray]
+    colors = [green, yellow, blue, magenta, cyan, black, ]
 
     warning = yellow
     fatal = red
@@ -54,9 +54,9 @@ if __name__ == "__main__":
     print_for_ds('magenta', 'color', color=COLORS.magenta)
     print_for_ds('cyan   ', 'color', color=COLORS.cyan)
     print_for_ds('white  ', 'color', color=COLORS.white)
-    print_for_ds('gray   ', 'color', color=COLORS.green)
+    print_for_ds('black  ', 'color', color=COLORS.black)
 
-    for i in len(COLORS.colors):
+    for i in range(len(COLORS.colors)):
         print COLORS.colors[i] + 'COLOR' + COLORS.end
 
     print_for_ds('warning', 'color', color=COLORS.warning)
