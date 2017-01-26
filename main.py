@@ -92,7 +92,7 @@ class COLORS:
     cyan    = colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan   , background=BACKGROUND.black)
     white   = colored.format(style=STYLE.normal, foreground=FOREGROUND.white  , background=BACKGROUND.black)
 
-    colors = [white, green, yellow, blue, magenta, cyan, black]
+    colors = [white, green, yellow, black, magenta, cyan]
 
     warning = yellow
     fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
