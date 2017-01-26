@@ -561,7 +561,7 @@ if __name__ == "__main__":
                     handled_ds_count += 1
                     print '\n' + COLORS.ok +\
                           '=' * 8 + \
-                          ' total: {0}\t complete: {1}\t remaining: {3} '.format(len(result[TEMPORARY]),
+                          ' total: {0}\t complete: {1}\t remaining: {2} '.format(len(result[TEMPORARY]),
                                                                                  handled_ds_count,
                                                                                  len(result[TEMPORARY])) +\
                           '=' * 8 + \
