@@ -499,6 +499,9 @@ if __name__ == "__main__":
     parser.add_option("-l", "--log-to-file", dest="log_to_file",
                       help="enable logging to file yymmdd_hhmmss_ds-name.log",
                       action="store_true", default=False)
+    parser.add_option("-c", "--color", dest="colorize",
+                      help="Colorize output",
+                      action="store_true", default=False)
 
     (options, args) = parser.parse_args()
     args = ['ds0-kha3','ds1-kha3','ds2-kha3','ds3-kha3','ds4-kha3','ds5-kha3','ds6-kha3','ds7-kha3','ds8-kha3','ds9-kha3',]
@@ -574,7 +577,8 @@ if __name__ == "__main__":
                     thread.start()
                     threads.append(thread)
 
-                    colorIndex = (colorIndex + 1) % len(COLORS.colors)
+                    if options.colorize:
+                        colorIndex = (colorIndex + 1) % len(COLORS.colors)
 
                 for thread in threads:
                     thread.join()
@@ -605,11 +609,11 @@ if __name__ == "__main__":
             line_temporary, \
             line_fatal = '', '', ''
 
-            for ds in result[COMPLETE]:
+            for ds in sorted(result[COMPLETE]):
                 line_complete += ds_colors[ds] + ds + COLORS.end + " "
-            for ds in result[TEMPORARY]:
+            for ds in sorted(result[TEMPORARY]):
                 line_temporary += ds_colors[ds] + ds + COLORS.end + " "
-            for ds in result[FATAL]:
+            for ds in sorted(result[FATAL]):
                 line_fatal += ds_colors[ds] + ds + COLORS.end + " "
 
             if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete
