@@ -606,11 +606,11 @@ if __name__ == "__main__":
             line_fatal = '', '', ''
 
             for ds in result[COMPLETE]:
-                line_complete += ds_colors[ds] + ds_name + COLORS.end + " "
+                line_complete += ds_colors[ds] + ds + COLORS.end + " "
             for ds in result[TEMPORARY]:
-                line_temporary += ds_colors[ds] + ds_name + COLORS.end + " "
+                line_temporary += ds_colors[ds] + ds + COLORS.end + " "
             for ds in result[FATAL]:
-                line_fatal += ds_colors[ds] + ds_name + COLORS.end + " "
+                line_fatal += ds_colors[ds] + ds + COLORS.end + " "
 
             if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete
             if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary
