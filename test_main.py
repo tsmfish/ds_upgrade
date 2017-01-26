@@ -98,7 +98,7 @@ class COLORS:
     fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
     error = red
     ok = green
-    info = blue
+    info = cyan
 
 
 def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
