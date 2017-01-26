@@ -559,11 +559,11 @@ if __name__ == "__main__":
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
                     handled_ds_count += 1
-                    print '\n' + COLORS.ok +\
+                    print '\n' + COLORS.info +\
                           '=' * 8 + \
                           ' total: {0}\t complete: {1}\t remaining: {2} '.format(len(result[TEMPORARY]),
                                                                                  handled_ds_count,
-                                                                                 len(result[TEMPORARY])) +\
+                                                                                 len(result[TEMPORARY])-handled_ds_count) +\
                           '=' * 8 + \
                           '\n' + COLORS.end
             else:
