@@ -538,6 +538,7 @@ if __name__ == "__main__":
         io_lock = threading.Lock()
         result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
         colorIndex = 0
+        ds_colors = {}
 
         while result[TEMPORARY]:
 
@@ -545,6 +546,7 @@ if __name__ == "__main__":
 
             if options.no_threads:
                 for ds_name in result[TEMPORARY]:
+                    ds_colors[ds_name] = COLORS.colors[colorIndex]
                     try:
                         update_ds(ds_name,
                                   user,
@@ -552,7 +554,7 @@ if __name__ == "__main__":
                                   result_queue=result_queue,
                                   force_delete=options.force_delete,
                                   log_to_file=options.log_to_file,
-                                  color=COLORS.colors[colorIndex])
+                                  color=ds_colors[ds_name])
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
@@ -560,6 +562,7 @@ if __name__ == "__main__":
                     # colorIndex = (colorIndex + 1) % len(COLORS.colors)
             else:
                 for ds_name in sorted(result[TEMPORARY]):
+                    ds_colors[ds_name] = COLORS.colors[colorIndex]
                     thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
                                                                                     user,
                                                                                     secret,
@@ -567,7 +570,7 @@ if __name__ == "__main__":
                                                                                     io_lock,
                                                                                     options.force_delete,
                                                                                     options.log_to_file,
-                                                                                    COLORS.colors[colorIndex]))
+                                                                                    ds_colors[ds_name]))
                     thread.start()
                     threads.append(thread)
 
@@ -592,14 +595,26 @@ if __name__ == "__main__":
 
             for ds_name in unhandled_ds:
                 result[FATAL].append(ds_name)
+                ds_colors[ds_name] = COLORS.fatal
                 if options.log_to_file:
                     post_result({NAME: ds_name, RESULT: FATAL},
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+COLORS.end
-            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+COLORS.end
-            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+COLORS.end
+            line_complete, \
+            line_temporary, \
+            line_fatal = '', '', ''
+
+            for ds in result[COMPLETE]:
+                line_complete += ds_colors[ds] + ds_name + COLORS.end + " "
+            for ds in result[TEMPORARY]:
+                line_temporary += ds_colors[ds] + ds_name + COLORS.end + " "
+            for ds in result[FATAL]:
+                line_fatal += ds_colors[ds] + ds_name + COLORS.end + " "
+
+            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete
+            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary
+            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + line_fatal
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
