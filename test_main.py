@@ -625,7 +625,7 @@ if __name__ == "__main__":
                 for thread in threads:
                     thread.join()
 
-            result = {COMPLETE: list(), FATAL: list(), TEMPORARY: list()}
+            result[TEMPORARY] = list()
 
             while not result_queue.empty():
                 thread_result = result_queue.get()
