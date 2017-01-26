@@ -89,6 +89,11 @@ if __name__ == "__main__":
     for i in range(len(COLORS.colors)):
         print COLORS.colors[i] + 'COLOR' + COLORS.end
 
+    for i in range(8):
+        print_for_ds('normal', 'style', COLORS.colored.format(style=i,
+                                                              foreground=COLORS.FOREGROUND.white,
+                                                              background=COLORS.BACKGROUND.black))
+
     print_for_ds('warning', 'color', color=COLORS.warning)
     print_for_ds('fatal  ', 'color', color=COLORS.fatal)
     print_for_ds('error  ', 'color', color=COLORS.error)
