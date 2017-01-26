@@ -95,8 +95,8 @@ class COLORS:
     colors = [white, green, yellow, blue, magenta, cyan, black]
 
     warning = yellow
-    fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
-    error = red
+    fatal = red
+    error = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
     ok = green
     info = cyan
 
