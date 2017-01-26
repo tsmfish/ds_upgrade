@@ -32,18 +32,18 @@ file_sizes = {  # should be STRING, for comparision with re.pastern catches file
 }
 
 print_strings = (
-    'environment no more'
-    'show system alarms'
-    'show version'
-    'show bof'
-    'file dir'
-    'show port'
-    'show card state'
-    'show service sdp-using'
-    'show router interface'
-    'show system ntp'
-    'show system ptp'
-    'show system security ssh'
+    'environment no more',
+    'show system alarms',
+    'show version',
+    'show bof',
+    'file dir',
+    'show port',
+    'show card state',
+    'show service sdp-using',
+    'show router interface',
+    'show system ntp',
+    'show system ptp',
+    'show system security ssh',
 )
 
 ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
