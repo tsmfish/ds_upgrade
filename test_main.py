@@ -12,6 +12,20 @@ from Queue import Queue
 from DS_Class import DS
 from copy_over_scp import scp_copy
 
+print_message_format = "> {0} < : {1}"
+log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
+
+target_sw_version = 'TiMOS-B-7.0.R13'
+target_sw_boot_version = 'TiMOS-L-7.0.R13'
+
+free_space_limit = 56   # in Mbytes
+random_wait_time = 5    # in seconds
+
+folder_for_SW = 'images/TiMOS-7.0.R13'
+new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
+new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
+
+
 COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 
@@ -51,19 +65,6 @@ ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
 file_size_pattern = re.compile(r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?')
 sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
-
-folder_for_SW = 'images/TiMOS-7.0.R13'
-new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
-new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
-
-target_sw_boot_version = 'TiMOS-L-7.0.R13'
-target_sw_version = 'TiMOS-B-7.0.R13'
-
-free_space_limit = 56   # in Mbytes
-random_wait_time = 5    # in seconds
-
-log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
-
 
 class COLORS:
 
@@ -117,7 +118,7 @@ class COLORS:
 
 def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
     if io_lock: io_lock.acquire()
-    print color+">> {0} << : {1}".format(host, message)+COLORS.end
+    print color+print_message_format.format(host, message)+COLORS.end
     if io_lock: io_lock.release()
     if log_file_name:
         try:
@@ -610,15 +611,24 @@ if __name__ == "__main__":
             line_fatal = '', '', ''
 
             for ds in sorted(result[COMPLETE]):
-                line_complete += ds_colors[ds] + ds + COLORS.end + " "
+                if options.colorize:
+                    line_complete += ds_colors[ds] + ds + COLORS.end + " "
+                else:
+                    line_complete += ds + " "
             for ds in sorted(result[TEMPORARY]):
-                line_temporary += ds_colors[ds] + ds + COLORS.end + " "
+                if options.colorize:
+                    line_temporary += ds_colors[ds] + ds + COLORS.end + " "
+                else:
+                    line_temporary += ds + " "
             for ds in sorted(result[FATAL]):
-                line_fatal += ds_colors[ds] + ds + COLORS.end + " "
+                if options.colorize:
+                    line_fatal += ds_colors[ds] + ds + COLORS.end + " "
+                else:
+                    line_fatal += ds + " "
 
-            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete
-            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary
-            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + line_fatal
+            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete + COLORS.end
+            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary + COLORS.end
+            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + line_fatal + COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
