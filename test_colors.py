@@ -45,19 +45,19 @@ class COLORS:
     end = "\x1b[0m"
     colored = '\x1b[{style};{foreground};{background}m'
 
-    black   = colored.format(style=STYLE.normal, foreground=FOREGROUND.black  , background=BACKGROUND.black)
-    red     = colored.format(style=STYLE.normal, foreground=FOREGROUND.red    , background=BACKGROUND.white)
-    green   = colored.format(style=STYLE.normal, foreground=FOREGROUND.green  , background=BACKGROUND.white)
-    yellow  = colored.format(style=STYLE.normal, foreground=FOREGROUND.yellow , background=BACKGROUND.white)
-    blue    = colored.format(style=STYLE.normal, foreground=FOREGROUND.blue   , background=BACKGROUND.white)
-    magenta = colored.format(style=STYLE.normal, foreground=FOREGROUND.magenta, background=BACKGROUND.white)
-    cyan    = colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan   , background=BACKGROUND.white)
-    white   = colored.format(style=STYLE.normal, foreground=FOREGROUND.white  , background=BACKGROUND.white)
+    black   = colored.format(style=STYLE.normal, foreground=FOREGROUND.black  , background=BACKGROUND.white)
+    red     = colored.format(style=STYLE.normal, foreground=FOREGROUND.red    , background=BACKGROUND.black)
+    green   = colored.format(style=STYLE.normal, foreground=FOREGROUND.green  , background=BACKGROUND.black)
+    yellow  = colored.format(style=STYLE.normal, foreground=FOREGROUND.yellow , background=BACKGROUND.black)
+    blue    = colored.format(style=STYLE.normal, foreground=FOREGROUND.blue   , background=BACKGROUND.black)
+    magenta = colored.format(style=STYLE.normal, foreground=FOREGROUND.magenta, background=BACKGROUND.black)
+    cyan    = colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan   , background=BACKGROUND.black)
+    white   = colored.format(style=STYLE.normal, foreground=FOREGROUND.white  , background=BACKGROUND.black)
 
     colors = [green, yellow, blue, magenta, cyan, black, red]
 
     warning = yellow
-    fatal = colored.format(style=STYLE.bold, foreground=FOREGROUND.red, background=BACKGROUND.white)
+    fatal = colored.format(style=STYLE.bold, foreground=FOREGROUND.red, background=BACKGROUND.black)
     error = red
     ok = green
     info = blue
