@@ -90,7 +90,7 @@ if __name__ == "__main__":
         print COLORS.colors[i] + 'COLOR' + COLORS.end
 
     for i in range(8):
-        print_for_ds('normal', 'style', color=COLORS.colored.format(style=i,
+        print_for_ds(i, 'style', color=COLORS.colored.format(style=i,
                                                                     foreground=COLORS.FOREGROUND.white,
                                                                     background=COLORS.BACKGROUND.black))
 
