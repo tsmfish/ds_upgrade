@@ -543,6 +543,7 @@ if __name__ == "__main__":
             result_queue, threads = Queue(), list()
 
             if options.no_threads:
+                handled_ds_count = 0
                 for ds_name in sorted(result[TEMPORARY]):
                     if ds_name not in ds_colors:
                         ds_colors[ds_name] = COLORS.colors[colorIndex]
@@ -557,6 +558,14 @@ if __name__ == "__main__":
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
+                    handled_ds_count += 1
+                    print '\n' + COLORS.ok +\
+                          '=' * 8 + \
+                          ' total: {0}\t complete: {1}\t remaining: {3} '.format(len(result[TEMPORARY]),
+                                                                                 handled_ds_count,
+                                                                                 len(result[TEMPORARY])) +\
+                          '=' * 8 + \
+                          '\n' + COLORS.end
             else:
                 for ds_name in sorted(result[TEMPORARY]):
                     if ds_name not in ds_colors:
