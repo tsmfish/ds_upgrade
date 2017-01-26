@@ -653,7 +653,6 @@ if __name__ == "__main__":
 
             for ds_name in unhandled_ds:
                 result[FATAL].append(ds_name)
-                ds_colors[ds_name] = COLORS.fatal
                 if options.log_to_file:
                     post_result({NAME: ds_name, RESULT: FATAL},
                                 None,
@@ -680,9 +679,9 @@ if __name__ == "__main__":
                 else:
                     line_fatal += ds + " "
 
-            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete + COLORS.end
-            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary + COLORS.end
-            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + line_fatal + COLORS.end
+            if result[COMPLETE]:  print    COLORS.ok + "\nComplete on       : " + line_complete + COLORS.end
+            if result[TEMPORARY]: print COLORS.warning + "Temporary fault on: " + line_temporary + COLORS.end
+            if result[FATAL]:     print   COLORS.fatal + "Fatal error on    : " + line_fatal + COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("\nRepeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
