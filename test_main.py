@@ -114,9 +114,9 @@ class COLORS:
               yellow,
               colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.green),
               magenta,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan, background=BACKGROUND.blue),
               black,
               colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.yellow),
-
               ]
 
     warning = yellow
@@ -201,7 +201,7 @@ def update_ds(ds_name,
                  io_lock,
                  log_file_name,
                  color)
-
+    time.sleep(random.random() * 10)
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
         time.sleep(random.random()*10)
