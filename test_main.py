@@ -107,7 +107,17 @@ class COLORS:
     cyan    = colored.format(style=STYLE.normal, foreground=FOREGROUND.cyan   , background=BACKGROUND.black)
     white   = colored.format(style=STYLE.normal, foreground=FOREGROUND.white  , background=BACKGROUND.black)
 
-    colors = [white, green, yellow, black, magenta, cyan]
+    colors = [white,
+              cyan,
+              green,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.cyan),
+              yellow,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.green),
+              magenta,
+              black,
+              colored.format(style=STYLE.normal, foreground=FOREGROUND.blue, background=BACKGROUND.yellow),
+
+              ]
 
     warning = yellow
     fatal = colored.format(style=STYLE.highlight, foreground=FOREGROUND.red, background=BACKGROUND.black)
@@ -190,7 +200,7 @@ def update_ds(ds_name,
                  '=' * 8 + ' Start process for \"{ds}\" '.format(ds=ds_name) + '=' * 8,
                  io_lock,
                  log_file_name,
-                 COLORS.ok)
+                 color)
 
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
@@ -202,9 +212,15 @@ def update_ds(ds_name,
                  log_file_name,
                  COLORS.ok)
 
-    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: COMPLETE})
-    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
-    if random.random() > 0.49: result_queue.put({NAME: ds_name, RESULT: FATAL})
+    if random.random() > 0.49:
+        result_queue.put({NAME: ds_name, RESULT: COMPLETE})
+        return
+    if random.random() > 0.49:
+        result_queue.put({NAME: ds_name, RESULT: TEMPORARY})
+        return
+    if random.random() > 0.49:
+        result_queue.put({NAME: ds_name, RESULT: FATAL})
+        return
 
     return
 
