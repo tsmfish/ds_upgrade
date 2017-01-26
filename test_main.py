@@ -634,4 +634,4 @@ if __name__ == "__main__":
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-    print COLORS.info+"Finish running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
+    print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S")) + COLORS.end
