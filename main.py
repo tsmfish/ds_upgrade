@@ -103,12 +103,12 @@ class COLORS:
 
 def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
     if io_lock: io_lock.acquire()
-    print color+"[{0}] : {1}".format(host, message)+COLORS.end
+    print color+">> {0} << : {1}".format(host, message)+COLORS.end
     if io_lock: io_lock.release()
     if log_file_name:
         try:
             with open(log_file_name, 'a') as log_file:
-                log_file.write("[{0}] : {1}\n".format(host, message))
+                log_file.write("{0}\n".format(message))
                 log_file.close()
         except IOError:
             pass
@@ -537,7 +537,7 @@ if __name__ == "__main__":
 
                     # colorIndex = (colorIndex + 1) % len(COLORS.colors)
             else:
-                for ds_name in result[TEMPORARY]:
+                for ds_name in sorted(result[TEMPORARY]):
                     thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
                                                                                     user,
                                                                                     secret,
@@ -578,7 +578,6 @@ if __name__ == "__main__":
             if result[COMPLETE]:  print '\033[92m'+"\nComplete on       : " + " ".join(sorted(result[COMPLETE]))+'\033[0m'
             if result[TEMPORARY]: print   '\033[93m'+"Temporary fault on: " + " ".join(sorted(result[TEMPORARY]))+'\033[0m'
             if result[FATAL]:     print   '\033[91m'+"Fatal error on    : " + " ".join(sorted(result[FATAL]))+'\033[0m'
-            print "\n"
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
