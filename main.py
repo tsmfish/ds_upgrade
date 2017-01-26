@@ -599,9 +599,10 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            line_complete, \
-            line_temporary, \
-            line_fatal = '', '', ''
+            if options.colorize:
+                line_complete, line_temporary, line_fatal = COLORS.end, COLORS.end, COLORS.end
+            else:
+                line_complete, line_temporary, line_fatal = '', '', ''
 
             for ds in sorted(result[COMPLETE]):
                 if options.colorize:
@@ -619,12 +620,12 @@ if __name__ == "__main__":
                 else:
                     line_fatal += ds + " "
 
-            if result[COMPLETE]:  print    COLORS.ok+"\nComplete on       : " + line_complete + COLORS.end
-            if result[TEMPORARY]: print COLORS.warning+"Temporary fault on: " + line_temporary + COLORS.end
-            if result[FATAL]:     print   COLORS.fatal+"Fatal error on    : " + line_fatal + COLORS.end
+            if result[COMPLETE]:  print    COLORS.ok + "\nComplete on       : " + line_complete + COLORS.end
+            if result[TEMPORARY]: print COLORS.warning + "Temporary fault on: " + line_temporary + COLORS.end
+            if result[FATAL]:     print   COLORS.fatal + "Fatal error on    : " + line_fatal + COLORS.end
 
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("Repeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
 
-    print COLORS.info+"\nFinish running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
+    print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S")) + COLORS.end

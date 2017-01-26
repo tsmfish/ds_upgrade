@@ -58,6 +58,9 @@ print_strings = (
     'show system ntp',
     'show system ptp',
     'show system security ssh',
+    'file version cf1:\images\TiMOS-7.0.R13\\both.tim',
+    'file version cf1:\\boot.tim'
+
 )
 
 ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
@@ -120,7 +123,7 @@ class COLORS:
               ]
 
     warning = yellow
-    fatal = colored.format(style=STYLE.normal, foreground=FOREGROUND.black, background=BACKGROUND.red)
+    fatal = red
     error = red
     ok = green
     info = cyan
@@ -647,9 +650,10 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            line_complete, \
-            line_temporary, \
-            line_fatal = '', '', ''
+            if options.colorize:
+                line_complete, line_temporary, line_fatal = COLORS.end, COLORS.end, COLORS.end
+            else:
+                line_complete, line_temporary, line_fatal = '', '', ''
 
             for ds in sorted(result[COMPLETE]):
                 if options.colorize:
