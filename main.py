@@ -544,7 +544,8 @@ if __name__ == "__main__":
 
             if options.no_threads:
                 for ds_name in result[TEMPORARY]:
-                    ds_colors[ds_name] = COLORS.colors[colorIndex]
+                    if ds_name not in ds_colors:
+                        ds_colors[ds_name] = COLORS.colors[colorIndex]
                     try:
                         update_ds(ds_name,
                                   user,
@@ -556,11 +557,13 @@ if __name__ == "__main__":
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
-
-                    # colorIndex = (colorIndex + 1) % len(COLORS.colors)
             else:
                 for ds_name in sorted(result[TEMPORARY]):
-                    ds_colors[ds_name] = COLORS.colors[colorIndex]
+                    if ds_name not in ds_colors:
+                        ds_colors[ds_name] = COLORS.colors[colorIndex]
+                        if options.colorize:
+                            colorIndex = (colorIndex + 1) % len(COLORS.colors)
+
                     thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
                                                                                     user,
                                                                                     secret,
@@ -571,9 +574,6 @@ if __name__ == "__main__":
                                                                                     ds_colors[ds_name]))
                     thread.start()
                     threads.append(thread)
-
-                    if options.colorize:
-                        colorIndex = (colorIndex + 1) % len(COLORS.colors)
 
                 for thread in threads:
                     thread.join()
