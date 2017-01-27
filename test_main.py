@@ -574,6 +574,7 @@ if __name__ == "__main__":
     secret = '' #  getpass.getpass('Password for DS:')
 
     print COLORS.info+"Start running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
+    start_time = time.time()
 
     if len(ds_list) == 1:
         update_ds(ds_list[0],
@@ -607,15 +608,19 @@ if __name__ == "__main__":
                     except Exception as e:
                         print_for_ds(ds_name, "**! Unhandled exception " + str(e))
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
+                    current_time = time.time()
                     handled_ds_count += 1
                     print '\n' + COLORS.info +\
                           '=' * 8 + \
                           ' total: {0}\t complete: {1}\t remaining: {2} '.format(len(result[TEMPORARY]),
                                                                                  handled_ds_count,
-                                                                                 len(result[TEMPORARY])-handled_ds_count) +\
+                                                                                 len(result[TEMPORARY])-handled_ds_count) + \
+                          '=' * 8
+                    print '=' * 8 + \
+                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S', time.localtime(current_time - start_time)),
+                                                                             (current_time-start_time)/handled_ds_count*len(result[TEMPORARY])) + \
                           '=' * 8 + \
                           '\n' + COLORS.end
-
             else:
                 for ds_name in sorted(result[TEMPORARY]):
                     if ds_name not in ds_colors:
@@ -686,5 +691,7 @@ if __name__ == "__main__":
             if not result[TEMPORARY]: break  # finish try loading
             if raw_input("\nRepeat load on temporary faulty nodes (Y-yes): ").strip().upper() != 'Y':
                 break
+            print
 
-    print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S")) + COLORS.end
+    print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
+    print 'Time lapsed: {0}'.format(time.strftime('%M:%S'), time.localtime(time.time() - start_time)) + COLORS.end
