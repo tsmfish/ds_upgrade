@@ -594,6 +594,7 @@ if __name__ == "__main__":
 
             if options.no_threads:
                 handled_ds_count = 0
+                start_tour_time = time.time()
                 for ds_name in sorted(result[TEMPORARY]):
                     if ds_name not in ds_colors:
                         ds_colors[ds_name] = COLORS.colors[colorIndex]
@@ -620,7 +621,7 @@ if __name__ == "__main__":
                           ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S',
                                                                                            time.localtime(current_time - start_time)),
                                                                              time.strftime('%M:%S',
-                                                                                           time.localtime((current_time-start_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
+                                                                                           time.localtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
                           '=' * 5 + \
                           '\n' + COLORS.end
             else:
