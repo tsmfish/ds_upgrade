@@ -200,7 +200,7 @@ def update_ds(ds_name,
         log_file_name = None
 
     print_for_ds(ds_name,
-                 '=' * 8 + ' Start process for \"{ds}\" '.format(ds=ds_name) + '=' * 8,
+                 '=' * 8 + ' Start process for {ds} '.format(ds=ds_name) + '=' * 8,
                  io_lock,
                  log_file_name,
                  color)
@@ -210,7 +210,7 @@ def update_ds(ds_name,
         time.sleep(random.random()*10)
 
     print_for_ds(ds_name,
-                 '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=ds_name) + '=' * 8,
+                 '=' * 8 + ' Finish process for {ds} '.format(ds=ds_name) + '=' * 8,
                  io_lock,
                  log_file_name,
                  COLORS.ok)
@@ -232,7 +232,7 @@ def update_ds(ds_name,
 
     # Connect and get basic inform
     print_for_ds(ds_name,
-                 '=' * 8 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
+                 '=' * 8 + ' Start process for {ds} '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  color)
@@ -514,7 +514,7 @@ def update_ds(ds_name,
         return
 
     print_for_ds(ds_name,
-                 '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
+                 '=' * 8 + ' Finish process for {ds} '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  COLORS.ok)

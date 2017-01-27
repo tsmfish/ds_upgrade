@@ -192,7 +192,7 @@ def update_ds(ds_name,
 
     # Connect and get basic inform
     print_for_ds(ds_name,
-                 '=' * 8 + ' Start process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
+                 '=' * 8 + ' Start process for {ds} '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  color)
@@ -474,7 +474,7 @@ def update_ds(ds_name,
         return
 
     print_for_ds(ds_name,
-                 '=' * 8 + ' Finish process for \"{ds}\" '.format(ds=node.ip) + '=' * 8,
+                 '=' * 8 + ' Finish process for {ds} '.format(ds=node.ip) + '=' * 8,
                  io_lock,
                  log_file_name,
                  COLORS.ok)
