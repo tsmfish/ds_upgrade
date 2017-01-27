@@ -616,10 +616,12 @@ if __name__ == "__main__":
                                                                                  handled_ds_count,
                                                                                  len(result[TEMPORARY])-handled_ds_count) + \
                           '=' * 8
-                    print '=' * 8 + \
-                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S', time.localtime(current_time - start_time)),
-                                                                             (current_time-start_time)/handled_ds_count*len(result[TEMPORARY])) + \
-                          '=' * 8 + \
+                    print '=' * 3 + \
+                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S',
+                                                                                           time.localtime(current_time - start_time)),
+                                                                             time.strftime('%M:%S',
+                                                                                           time.localtime((current_time-start_time)/handled_ds_count*len(result[TEMPORARY])))) + \
+                          '=' * 3 + \
                           '\n' + COLORS.end
             else:
                 for ds_name in sorted(result[TEMPORARY]):
