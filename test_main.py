@@ -105,11 +105,11 @@ def update_ds(ds_name,
                  io_lock,
                  log_file_name,
                  color)
-    time.sleep(random.random() * 10)
+    time.sleep(random.random() * 7)
     print_for_ds(ds_name, "Start", io_lock, log_file_name, color, True)
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
-        time.sleep(random.random()*10)
+        time.sleep(random.random()*3)
 
     print_for_ds(ds_name,
                  '=' * 8 + ' Finish process for {ds} '.format(ds=ds_name) + '=' * 8,
@@ -442,7 +442,7 @@ if __name__ == "__main__":
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    args = ['ds0-kha333','ds001-kha333','ds7-kha333','ds2-kha333','ds3-kha3333','ds4-kha333','ds5-kha333','ds6-kha333','ds7-kha333','ds8-kha333','ds9-kha333',]
+    args = ['ds0-kha333','ds1-kha333','ds7-kha333','ds2-kha333','ds3-kha3333','ds4-kha333','ds5-kha333','ds6-kha333','ds7-kha333','ds8-kha333','ds9-kha333',]
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
