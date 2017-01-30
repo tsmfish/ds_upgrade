@@ -510,6 +510,11 @@ if __name__ == "__main__":
             print COLORS.error+"Error while open file: {file}".format(file=options.ds_list_file_name)+COLORS.end
             print COLORS.error+str(e)+COLORS.end
 
+    ds_list = list()
+    for i in range(len(ds_list_raw)):
+        if ds_list_raw[i] not in ds_list_raw[0:i]:
+            ds_list.append(ds_list_raw[i])
+
     ds_list = list(set(ds_list_raw))
 
     if not ds_list:
@@ -546,7 +551,7 @@ if __name__ == "__main__":
                 handled_ds_count = 0
                 start_tour_time = time.time()
 
-                for ds_name in sorted(result[TEMPORARY]):
+                for ds_name in result[TEMPORARY]:
                     if ds_name not in ds_colors:
                         ds_colors[ds_name] = COLORS.colors[colorIndex]
                     try:
@@ -576,7 +581,7 @@ if __name__ == "__main__":
                           '=' * 4 + \
                           '\n' + COLORS.end
             else:
-                for ds_name in sorted(result[TEMPORARY]):
+                for ds_name in result[TEMPORARY]:
                     if ds_name not in ds_colors:
                         ds_colors[ds_name] = COLORS.colors[colorIndex]
                         if options.colorize:
