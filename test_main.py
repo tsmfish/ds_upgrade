@@ -80,7 +80,10 @@ def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=
     if message_color:
         colored_message = message_color + message + COLORS.end
     else:
-        colored_message = message
+        if host_color:
+            colored_message = host_color + message + COLORS.end
+        else:
+            colored_message = message
 
     if print_lock: print_lock.acquire()
     print print_message_format.format(colored_host, colored_message)
@@ -549,9 +552,9 @@ if __name__ == "__main__":
                           '=' * 8
                     print '=' * 4 + \
                           ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
-                                                                                           time.time(current_time - start_time)),
+                                                                                           time.gmtime(current_time - start_time)),
                                                                              time.strftime('%H:%M:%S',
-                                                                                           time.time((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
+                                                                                           time.gmtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
                           '=' * 4 + \
                           '\n' + COLORS.end
             else:
@@ -628,4 +631,4 @@ if __name__ == "__main__":
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
     print 'Time elapsed: {0}'.format(
-        time.strftime('%H:%M:%S', time.time(time.time() - start_time))) + COLORS.end
+        time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))) + COLORS.end
