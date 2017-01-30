@@ -11,7 +11,8 @@ sys.path.insert(1, '/home/butko/.local/lib/python2.6/site-packages/scp-0.10.2-py
 
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 from scp import SCPClient
-from main import COLORS, print_for_ds
+from ds_helper import COLORS, print_for_ds
+
 
 WAIT_TIME, RETRY_COUNT = 7, 5
 
