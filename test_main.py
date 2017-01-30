@@ -76,7 +76,10 @@ def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=
     if host_color:
         colored_host = host_color + host + COLORS.end
     else:
-        colored_host = host
+        if message_color:
+            colored_host = message_color + host + COLORS.end
+        else:
+            colored_host = host
     if message_color:
         colored_message = message_color + message + COLORS.end
     else:
@@ -117,7 +120,7 @@ def update_ds(ds_name,
               io_lock=None,
               force_delete=False,
               log_to_file=False,
-              color=COLORS.white):
+              color=None):
 
     if io_lock: time.sleep(random_wait_time * random.random())
     if log_to_file:
@@ -470,7 +473,7 @@ if __name__ == "__main__":
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    args = ['ds0-kha333','ds1-kha333','ds7-kha333','ds2-kha333','ds3-kha3333','ds4-kha333','ds5-kha333','ds6-kha333','ds7-kha333','ds8-kha333','ds9-kha333',]
+    args = ['ds0-kha333','ds1-kha333','ds7-kha333','ds2-kha333','ds3-kha333','ds4-kha333','ds5-kha333','ds6-kha333','ds7-kha333','ds8-kha333','ds9-kha333',]
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
@@ -528,9 +531,13 @@ if __name__ == "__main__":
             if options.no_threads:
                 handled_ds_count = 0
                 start_tour_time = time.time()
-                for ds_name in sorted(result[TEMPORARY]):
+                for ds_name in result[TEMPORARY]:
                     if ds_name not in ds_colors:
-                        ds_colors[ds_name] = COLORS.colors[colorIndex]
+                        if options.colorize:
+                            ds_colors[ds_name] = COLORS.colors[colorIndex]
+                            colorIndex = (colorIndex + 1) % len(COLORS.colors)
+                        else:
+                            ds_colors[ds_name] = None
                     try:
                         update_ds(ds_name,
                                   user,
@@ -558,11 +565,13 @@ if __name__ == "__main__":
                           '=' * 4 + \
                           '\n' + COLORS.end
             else:
-                for ds_name in sorted(result[TEMPORARY]):
+                for ds_name in result[TEMPORARY]:
                     if ds_name not in ds_colors:
-                        ds_colors[ds_name] = COLORS.colors[colorIndex]
                         if options.colorize:
+                            ds_colors[ds_name] = COLORS.colors[colorIndex]
                             colorIndex = (colorIndex + 1) % len(COLORS.colors)
+                        else:
+                            ds_colors[ds_name] = None
 
                     thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
                                                                                     user,
