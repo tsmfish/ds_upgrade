@@ -549,9 +549,9 @@ if __name__ == "__main__":
                           '=' * 8
                     print '=' * 4 + \
                           ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
-                                                                                           time.localtime(current_time - start_time)),
+                                                                                           time.time(current_time - start_time)),
                                                                              time.strftime('%H:%M:%S',
-                                                                                           time.localtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
+                                                                                           time.time((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
                           '=' * 4 + \
                           '\n' + COLORS.end
             else:
