@@ -622,23 +622,23 @@ if __name__ == "__main__":
                                 None,
                                 time.strftime(log_file_format.format(ds_name=ds_name)))
 
-            if options.colorize or options.no_threads:
+            if options.colorize and not options.no_threads:
                 line_complete, line_temporary, line_fatal = COLORS.end, COLORS.end, COLORS.end
             else:
                 line_complete, line_temporary, line_fatal = '', '', ''
 
             for ds in sorted(result[COMPLETE]):
-                if options.colorize or options.no_threads:
+                if options.colorize and not options.no_threads:
                     line_complete += ds_colors[ds] + ds + COLORS.end + " "
                 else:
                     line_complete += ds + " "
             for ds in sorted(result[TEMPORARY]):
-                if options.colorize or options.no_threads:
+                if options.colorize and not options.no_threads:
                     line_temporary += ds_colors[ds] + ds + COLORS.end + " "
                 else:
                     line_temporary += ds + " "
             for ds in sorted(result[FATAL]):
-                if options.colorize or options.no_threads:
+                if options.colorize and not options.no_threads:
                     line_fatal += ds_colors[ds] + ds + COLORS.end + " "
                 else:
                     line_fatal += ds + " "
