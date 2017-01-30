@@ -129,9 +129,13 @@ class COLORS:
     info = cyan
 
 
-def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
+def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white, is_error=False):
+
     if io_lock: io_lock.acquire()
-    print color+print_message_format.format(host, message)+COLORS.end
+    if is_error:
+        print color+print_message_format.format(host, COLORS.error+message)+COLORS.end
+    else:
+        print color+print_message_format.format(host, message)+COLORS.end
     if io_lock: io_lock.release()
     if log_file_name:
         try:
@@ -140,7 +144,6 @@ def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.w
                 log_file.close()
         except IOError:
             pass
-
 
 def is_contains(regexp, text):
     """
@@ -205,6 +208,7 @@ def update_ds(ds_name,
                  log_file_name,
                  color)
     time.sleep(random.random() * 10)
+    print_for_ds(ds_name, "Start", io_lock, log_file_name, color, True)
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
         time.sleep(random.random()*10)
@@ -540,7 +544,7 @@ if __name__ == "__main__":
                       action="store_true", default=False)
 
     (options, args) = parser.parse_args()
-    args = ['ds0-kha3','ds1-kha3','ds2-kha3','ds3-kha3','ds4-kha3','ds5-kha3','ds6-kha3','ds7-kha3','ds8-kha3','ds9-kha3',]
+    args = ['ds0-kha333','ds001-kha333','ds7-kha333','ds2-kha333','ds3-kha3333','ds4-kha333','ds5-kha333','ds6-kha333','ds7-kha333','ds8-kha333','ds9-kha333',]
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
@@ -552,7 +556,10 @@ if __name__ == "__main__":
             print COLORS.error+"Error while open file: {file}".format(file=options.ds_list_file_name)+COLORS.end
             print COLORS.error+str(e)+COLORS.end
 
-    ds_list = list(set(ds_list_raw))
+    ds_list = list()
+    for i in range(len(ds_list_raw)):
+        if ds_list_raw[i] not in ds_list_raw[0:i]:
+            ds_list.append(ds_list_raw[i])
 
     if not ds_list:
         parser.print_help()
@@ -617,12 +624,12 @@ if __name__ == "__main__":
                                                                                  handled_ds_count,
                                                                                  len(result[TEMPORARY])-handled_ds_count) + \
                           '=' * 8
-                    print '=' * 6 + \
-                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S',
+                    print '=' * 4 + \
+                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
                                                                                            time.localtime(current_time - start_time)),
-                                                                             time.strftime('%M:%S',
+                                                                             time.strftime('%H:%M:%S',
                                                                                            time.localtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
-                          '=' * 6 + \
+                          '=' * 4 + \
                           '\n' + COLORS.end
             else:
                 for ds_name in sorted(result[TEMPORARY]):
@@ -697,4 +704,5 @@ if __name__ == "__main__":
             print
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
-    print 'Time lapsed: {0}'.format(time.strftime('%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
+    print 'Time elapsed: {0}'.format(
+        time.strftime('%H:%M:%S', time.localtime(time.time() - start_time))) + COLORS.end

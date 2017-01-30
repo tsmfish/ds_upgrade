@@ -530,8 +530,6 @@ if __name__ == "__main__":
         if ds_list_raw[i] not in ds_list_raw[0:i]:
             ds_list.append(ds_list_raw[i])
 
-    ds_list = list(set(ds_list_raw))
-
     if not ds_list:
         parser.print_help()
         exit()
