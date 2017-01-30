@@ -31,8 +31,11 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
             break
         except AuthenticationException as e:
             # Try reconnect
-            print_for_ds(ds, "Warning: " + str(e), io_lock, COLORS.error)
-            time.sleep(WAIT_TIME)
+            if i < RETRY_COUNT - 1:
+                print_for_ds(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, COLORS.info)
+                time.sleep(WAIT_TIME)
+            else:
+                print_for_ds(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, COLORS.error)
     else:
         raise Exception('Fail to copy SW to {0}'.format(ds))
 

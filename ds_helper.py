@@ -63,14 +63,26 @@ class COLORS:
     info = cyan
 
 
-def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white, is_error=False):
+def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=None, message_color=None):
 
-    if io_lock: io_lock.acquire()
-    if is_error:
-        print color+print_message_format.format(host, COLORS.error+message)+COLORS.end
+    if host_color:
+        colored_host = host_color + host + COLORS.end
     else:
-        print color+print_message_format.format(host, message)+COLORS.end
-    if io_lock: io_lock.release()
+        if message_color:
+            colored_host = message_color + host + COLORS.end
+        else:
+            colored_host = host
+    if message_color:
+        colored_message = message_color + message + COLORS.end
+    else:
+        if host_color:
+            colored_message = host_color + message + COLORS.end
+        else:
+            colored_message = message
+
+    if print_lock: print_lock.acquire()
+    print print_message_format.format(colored_host, colored_message)
+    if print_lock: print_lock.release()
     if log_file_name:
         try:
             with open(log_file_name, 'a') as log_file:
@@ -78,7 +90,6 @@ def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.w
                 log_file.close()
         except IOError:
             pass
-
 
 def is_contains(regexp, text):
     """

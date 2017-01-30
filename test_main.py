@@ -533,10 +533,6 @@ if __name__ == "__main__":
                 start_tour_time = time.time()
                 for ds_name in result[TEMPORARY]:
                     if ds_name not in ds_colors:
-                        if options.colorize:
-                            ds_colors[ds_name] = COLORS.colors[colorIndex]
-                            colorIndex = (colorIndex + 1) % len(COLORS.colors)
-                        else:
                             ds_colors[ds_name] = None
                     try:
                         update_ds(ds_name,
@@ -547,7 +543,7 @@ if __name__ == "__main__":
                                   log_to_file=options.log_to_file,
                                   color=ds_colors[ds_name])
                     except Exception as e:
-                        print_for_ds(ds_name, "**! Unhandled exception " + str(e))
+                        print_for_ds(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
                     current_time = time.time()
                     handled_ds_count += 1
