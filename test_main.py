@@ -11,7 +11,7 @@ from Queue import Queue
 
 from DS_Class import DS
 from copy_over_scp import scp_copy
-from ds_helper import COLORS, print_for_ds, extract
+from ds_helper import COLORS, extract, print_message_format
 
 
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
@@ -71,6 +71,22 @@ sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
 
 
+def print_for_ds(host, message, io_lock=None, log_file_name=None, host_color=COLORS.white, message_color=None):
+
+    if io_lock: io_lock.acquire()
+    if message_color:
+        print host_color + print_message_format.format(host, message_color + message) + COLORS.end
+    else:
+        print host_color + print_message_format.format(host, message) + COLORS.end
+    if io_lock: io_lock.release()
+    if log_file_name:
+        try:
+            with open(log_file_name, 'a') as log_file:
+                log_file.write("{0}\n".format(message))
+                log_file.close()
+        except IOError:
+            pass
+
 def post_result(result, queuq=None, log_file_name=None):
     if queuq:
         queuq.put(result)
@@ -105,8 +121,11 @@ def update_ds(ds_name,
                  io_lock,
                  log_file_name,
                  color)
+
+    print_for_ds(ds_name, "Wait for start", io_lock, log_file_name, color, COLORS.warning)
     time.sleep(random.random() * 7)
-    print_for_ds(ds_name, "Start", io_lock, log_file_name, color, True)
+    print_for_ds(ds_name, "Start", io_lock, log_file_name, color, COLORS.error)
+
     for string in print_strings:
         print_for_ds(ds_name, string, io_lock, log_file_name, color)
         time.sleep(random.random()*3)
