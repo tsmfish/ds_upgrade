@@ -622,4 +622,4 @@ if __name__ == "__main__":
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
     print 'Time elapsed: {0}'.format(
-        time.strftime('%H:%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
+        time.strftime('%H:%M:%S', time.time(time.time() - start_time))) + COLORS.end
