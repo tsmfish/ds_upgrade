@@ -117,10 +117,13 @@ class COLORS:
     info = cyan
 
 
-def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
+def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white, is_error=False):
 
     if io_lock: io_lock.acquire()
-    print color+print_message_format.format(host, message)+COLORS.end
+    if is_error:
+        print color+print_message_format.format(host, COLORS.error+message)+COLORS.end
+    else:
+        print color+print_message_format.format(host, message)+COLORS.end
     if io_lock: io_lock.release()
     if log_file_name:
         try:
@@ -199,7 +202,7 @@ def update_ds(ds_name,
     try:
         node.conn()
     except Exception:
-        print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, COLORS.error)
+        print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, True)
         post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
         return
 
@@ -207,7 +210,12 @@ def update_ds(ds_name,
 
     # Check node SW version
     if node.sw_ver.lower() == target_sw_version.lower():
-        print_for_ds(ds_name, "*** Running SW version already \"{0}\"".format(node.sw_ver), io_lock, log_file_name, color)
+        print_for_ds(ds_name,
+                     "*** Running SW version already \"{0}\"".format(node.sw_ver),
+                     io_lock,
+                     log_file_name,
+                     color,
+                     True)
         post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
         return
 
@@ -222,7 +230,7 @@ def update_ds(ds_name,
                          color)
             print_for_ds(ds_name, '*** ' + node.prime_image, io_lock, log_file_name, color)
         else:
-            print_for_ds(ds_name, '!!! Problem with primary image', io_lock, log_file_name, color)
+            print_for_ds(ds_name, '!!! Problem with primary image', io_lock, log_file_name, color, True)
             print_for_ds(ds_name, '**! ' + node.prime_image, io_lock, log_file_name, color)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
@@ -233,7 +241,8 @@ def update_ds(ds_name,
                          .format(primary_img[0], node.sw_ver),
                          io_lock,
                          log_file_name,
-                         color)
+                         color,
+                         True)
             print_for_ds(ds_name,
                          '!!! May be this switch already prepare for update!',
                          io_lock,
@@ -250,7 +259,8 @@ def update_ds(ds_name,
                              .format(primary_bof_image, primary_bof_image_size),
                              io_lock,
                              log_file_name,
-                             color)
+                             color,
+                             True)
             else:
                 print_for_ds(ds_name,
                              '*** {0} file has correct size.'
@@ -266,7 +276,8 @@ def update_ds(ds_name,
                              .format('boot.tim', boot_tim_file_size),
                              io_lock,
                              log_file_name,
-                             color)
+                             color,
+                             True)
             else:
                 print_for_ds(ds_name,
                              '*** {0} file has correct size.'
@@ -343,7 +354,7 @@ def update_ds(ds_name,
     mb = node.free_space()
     print_for_ds(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=node.ip), io_lock, log_file_name, color)
     if mb < free_space_limit:
-        print_for_ds(ds_name, '!!! Not enough space for continue', io_lock, log_file_name, color)
+        print_for_ds(ds_name, '!!! Not enough space for continue', io_lock, log_file_name, color, True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -358,7 +369,7 @@ def update_ds(ds_name,
     try:
         scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
     except Exception as e:
-        print_for_ds(ds_name, str(e), io_lock, log_file_name, color)
+        print_for_ds(ds_name, str(e), io_lock, log_file_name, color, True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -377,7 +388,7 @@ def update_ds(ds_name,
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
     else:
-        print_for_ds(ds_name, '!!! New both.tim not from this platform', io_lock, log_file_name, color)
+        print_for_ds(ds_name, '!!! New both.tim not from this platform', io_lock, log_file_name, color, True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -400,7 +411,7 @@ def update_ds(ds_name,
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         node.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
-        print_for_ds(ds_name, '!!! New boot.tim not from this platform', io_lock, log_file_name, color)
+        print_for_ds(ds_name, '!!! New boot.tim not from this platform', io_lock, log_file_name, color, True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -415,7 +426,8 @@ def update_ds(ds_name,
                      .format(primary_bof_image_type, ds_type),
                      io_lock,
                      log_file_name,
-                     color)
+                     color,
+                     True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -436,7 +448,8 @@ def update_ds(ds_name,
                      .format(boot_tim_type, ds_type),
                      io_lock,
                      log_file_name,
-                     color)
+                     color,
+                     True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -457,7 +470,8 @@ def update_ds(ds_name,
                      .format(primary_bof_image, primary_bof_image_size),
                      io_lock,
                      log_file_name,
-                     color)
+                     color,
+                     True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -468,7 +482,8 @@ def update_ds(ds_name,
                      .format('boot.tim', boot_tim_file_size),
                      io_lock,
                      log_file_name,
-                     color)
+                     color,
+                     True)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -563,7 +578,7 @@ if __name__ == "__main__":
                                   log_to_file=options.log_to_file,
                                   color=ds_colors[ds_name])
                     except Exception as e:
-                        print_for_ds(ds_name, "**! Unhandled exception " + str(e))
+                        print_for_ds(ds_name, "**! Unhandled exception " + str(e), is_error=True)
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
                     current_time = time.time()
                     handled_ds_count += 1
@@ -653,4 +668,4 @@ if __name__ == "__main__":
             print
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
-    print 'Time lapsed: {0}'.format(time.strftime('%H:%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
+    print 'Time elapsed: {0}'.format(time.strftime('%H:%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
