@@ -11,12 +11,12 @@ sys.path.insert(1, '/home/butko/.local/lib/python2.6/site-packages/scp-0.10.2-py
 
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 from scp import SCPClient
-
+from main import COLORS, print_for_ds
 
 WAIT_TIME, RETRY_COUNT = 7, 5
 
 
-def scp_copy(ds, user, _password, what, where):
+def scp_copy(ds, user, _password, what, where, io_lock=None):
     """Function for recursive copy directory to ds
     :parameter what='folder/' copy content of this folder to remove folder (where)
     :parameter what='folder' copy this folder to remove with saving name
@@ -30,10 +30,10 @@ def scp_copy(ds, user, _password, what, where):
             break
         except AuthenticationException as e:
             # Try reconnect
-            print "{0} : Warning: ".format(ds) + str(e)
+            print_for_ds(ds, "Warning: " + str(e), io_lock, COLORS.error)
             time.sleep(WAIT_TIME)
     else:
-        raise Exception('Fail to copy SW to DS')
+        raise Exception('Fail to copy SW to {0}'.format(ds))
 
     with SCPClient(ssh.get_transport()) as scp:
         scp.put(what, where, recursive=True)
