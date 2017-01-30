@@ -118,6 +118,7 @@ class COLORS:
 
 
 def print_for_ds(host, message, io_lock=None, log_file_name=None, color=COLORS.white):
+
     if io_lock: io_lock.acquire()
     print color+print_message_format.format(host, message)+COLORS.end
     if io_lock: io_lock.release()
@@ -135,7 +136,6 @@ def is_contains(regexp, text):
 
     :param regexp:
     :param text:
-    :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: True if string contains regular expression
     """
     if re.search(regexp, text):
@@ -149,7 +149,6 @@ def extract(regexp, text):
 
     :param regexp: regular expression
     :param text: source for extracting
-    :param flags: default re.IGNORECASE Only for string regexp arguments
     :return: first occur regular expression
     """
     try:
@@ -322,7 +321,7 @@ def update_ds(ds_name,
             if not force_delete:
                 # For beginning ask user for deleting
                 if io_lock: io_lock.acquire()
-                answer = raw_input("[{0}] : *** Delete {1} (y/n)? ".format(ds_name, f))
+                answer = raw_input(color+print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f))+COLORS.end)
                 if io_lock: io_lock.release()
             if force_delete or answer.lower() == 'y':
                 command_send_result = node.send('file delete {0} force'.format(f))
@@ -569,12 +568,12 @@ if __name__ == "__main__":
                                                                                  handled_ds_count,
                                                                                  len(result[TEMPORARY])-handled_ds_count) + \
                           '=' * 8
-                    print '=' * 6 + \
-                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%M:%S',
+                    print '=' * 4 + \
+                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
                                                                                            time.localtime(current_time - start_time)),
-                                                                             time.strftime('%M:%S',
+                                                                             time.strftime('%H:%M:%S',
                                                                                            time.localtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
-                          '=' * 6 + \
+                          '=' * 4 + \
                           '\n' + COLORS.end
             else:
                 for ds_name in sorted(result[TEMPORARY]):
@@ -649,4 +648,4 @@ if __name__ == "__main__":
             print
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
-    print 'Time lapsed: {0}'.format(time.strftime('%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
+    print 'Time lapsed: {0}'.format(time.strftime('%H:%M:%S', time.localtime(time.time() - start_time))) + COLORS.end
