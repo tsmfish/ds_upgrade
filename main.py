@@ -30,10 +30,6 @@ COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
 
 
-COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
-NAME, RESULT = 'name', 'result'
-
-
 new_SW = {
     'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
     'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
@@ -229,7 +225,14 @@ def update_ds(ds_name,
             if not force_delete:
                 # For beginning ask user for deleting
                 if io_lock: io_lock.acquire()
-                answer = raw_input(color+print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f))+COLORS.end)
+                try:
+                    if color:
+                        answer = raw_input(color+print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f))+COLORS.end)
+                    else:
+                        answer = raw_input(print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f)))
+                except Exception:
+                    answer = 'n'
+                    pass
                 if io_lock: io_lock.release()
             if force_delete or answer.lower() == 'y':
                 command_send_result = node.send('file delete {0} force'.format(f))
@@ -423,9 +426,8 @@ if __name__ == "__main__":
             print COLORS.error+str(e)+COLORS.end
 
     ds_list = list()
-    for i in range(len(ds_list_raw)):
-        if ds_list_raw[i] not in ds_list_raw[0:i]:
-            ds_list.append(ds_list_raw[i])
+    for ds in ds_list_raw:
+        if ds not in ds_list: ds_list.append(ds)
 
     if not ds_list:
         parser.print_help()
