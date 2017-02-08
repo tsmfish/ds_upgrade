@@ -9,7 +9,7 @@ import threading
 import time
 from Queue import Queue
 
-from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnricable
+from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnreachable
 from copy_over_scp import scp_copy
 from ds_helper import COLORS, print_for_ds, print_message_format, extract
 
@@ -101,7 +101,7 @@ def update_ds(ds_name,
             print_for_ds(ds_name, 'Wrong password', io_lock, log_file_name, color, COLORS.error)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
-        except ExceptionHostUnricable:
+        except ExceptionHostUnreachable:
             print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
