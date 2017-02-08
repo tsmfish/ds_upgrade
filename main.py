@@ -9,7 +9,7 @@ import threading
 import time
 from Queue import Queue
 
-from DS_Class import DS
+from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnricable
 from copy_over_scp import scp_copy
 from ds_helper import COLORS, print_for_ds, print_message_format, extract
 
@@ -52,6 +52,8 @@ file_size_pattern = re.compile(r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d
 sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
 
+RETRY_CONNECTION_LIMIT = 5
+FAIL_CONNATION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
 
 def post_result(result, queu=None, log_file_name=None):
     if queu:
@@ -91,13 +93,26 @@ def update_ds(ds_name,
                  io_lock,
                  log_file_name,
                  color)
-
-    try:
-        node.conn()
-    except Exception:
-        print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
-        post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
-        return
+    for tray in range(RETRY_CONNECTION_LIMIT):
+        try:
+            node.conn()
+            break
+        except ExceptionWrongPassword:
+            print_for_ds(ds_name, 'Wrong password', io_lock, log_file_name, color, COLORS.error)
+            post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
+            return
+        except ExceptionHostUnricable:
+            print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
+            post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
+            return
+        except Exception:
+            if tray != RETRY_CONNECTION_LIMIT - 1:
+                print_for_ds(ds_name, 'Cannot connect! Try reconnect...', io_lock, log_file_name, color)
+            else:
+                print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
+                post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
+                return
+        time.sleep(FAIL_CONNATION_WAIT_INTERVALS[tray])
 
     node.get_base_info()
 

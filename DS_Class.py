@@ -63,12 +63,15 @@ class DS(object):
 
         except NetMikoTimeoutException:
             logging.warning(u'Timeout, may be host {0} unreachable'.format(self.ip))
-            raise NetMikoAuthenticationException(self.ip)
-        except NetMikoAuthenticationException:
-            logging.warning(u'!!! Wrong password !!!!')
-            print('!!! Wrong password !!!!')
-            raise ExceptionWrongPassword(self.user)
-            # sys.exit()
+            raise NetMikoTimeoutException(self.ip)
+        except NetMikoAuthenticationException as error:
+            error_decription = str(error)
+            if re.findall(r'password', error_decription, re.I):
+                logging.warning(u'!!! Wrong password !!!!')
+                raise ExceptionWrongPassword(self.user)
+            if re.findall(r'unreachable', error_decription, re.I):
+                logging.warning(u'!!! Host unreachable!!!!')
+                raise ExceptionHostUnricable(self.ip)
 
     def get_base_info(self):
         """ Return base information about switch
@@ -171,8 +174,11 @@ class DS(object):
 
 class ExceptionWrongPassword(Exception):
     def __init__(self, user_name):
-        super.__init__()
+        super(ExceptionWrongPassword).__init__(user_name)
         self.user_name = user_name
 
-    def get_user_name(self):
-        return self.user_name
+
+class ExceptionHostUnricable(Exception):
+    def __init__(self, host):
+        super(ExceptionHostUnricable).__init__(host)
+        self.host = host
