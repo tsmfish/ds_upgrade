@@ -169,11 +169,11 @@ class DS(object):
 
 class ExceptionWrongPassword(Exception):
     def __init__(self, user_name):
-        super(ExceptionWrongPassword).__init__(user_name)
+        super(ExceptionWrongPassword, self).__init__(user_name)
         self.user_name = user_name
 
 
 class ExceptionHostUnreachable(Exception):
     def __init__(self, host):
-        super(ExceptionHostUnreachable).__init__(host)
+        super(ExceptionHostUnreachable, self).__init__(host)
         self.host = host
