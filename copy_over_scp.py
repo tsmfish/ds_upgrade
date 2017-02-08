@@ -14,7 +14,8 @@ from scp import SCPClient
 from ds_helper import COLORS, print_for_ds
 
 
-WAIT_TIME, RETRY_COUNT = 7, 5
+FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
+RETRY_COUNT = 5
 
 
 def scp_copy(ds, user, _password, what, where, io_lock=None):
@@ -33,7 +34,7 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
             # Try reconnect
             if i < RETRY_COUNT - 1:
                 print_for_ds(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, COLORS.info)
-                time.sleep(WAIT_TIME)
+                time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[i])
             else:
                 print_for_ds(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, COLORS.error)
     else:

@@ -53,7 +53,7 @@ sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
 
 RETRY_CONNECTION_LIMIT = 5
-FAIL_CONNATION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
+FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
 
 def post_result(result, queu=None, log_file_name=None):
     if queu:
@@ -112,7 +112,7 @@ def update_ds(ds_name,
                 print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
                 post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
                 return
-        time.sleep(FAIL_CONNATION_WAIT_INTERVALS[tray])
+        time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[tray])
 
     node.get_base_info()
 
