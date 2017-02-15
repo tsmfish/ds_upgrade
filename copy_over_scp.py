@@ -25,6 +25,7 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
     :exception Exception() if AuthenticationException occurred 5-times
     """
     ssh = SSHClient()
+    ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
     for i in range(RETRY_COUNT):
         try:
@@ -35,15 +36,14 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
                         timeout=20,
                         allow_agent=True)
             break
-        except AuthenticationException as e:
+        except Exception as e:
             # Try reconnect
             if i < RETRY_COUNT - 1:
                 print_for_ds(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, None, COLORS.info)
                 time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[i])
             else:
                 print_for_ds(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, None, COLORS.error)
-    else:
-        raise Exception('Fail to copy SW to {0}'.format(ds))
+                raise Exception('Fail to copy SW to {0}'.format(ds))
 
     with SCPClient(ssh.get_transport(), socket_timeout=20) as scp:
         scp.put(what, where, recursive=True)
