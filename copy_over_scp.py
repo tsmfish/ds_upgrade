@@ -28,7 +28,7 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
     ssh.set_missing_host_key_policy(AutoAddPolicy())
     for i in range(RETRY_COUNT):
         try:
-            ssh.connect(ds, username=user, password=str(_password), port=22, banner_timeout=13)
+            ssh.connect(ds, username=user, password=str(_password), port=22, banner_timeout=20)
             break
         except AuthenticationException as e:
             # Try reconnect
