@@ -62,27 +62,41 @@ class COLORS:
     ok = green
     info = cyan
 
+__ds_host_name_parse = re.compile(r'\b([A-Z]+?\d+?-[A-Z]{3})(\d+?)\b')
+
 
 def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=None, message_color=None):
 
-    if host_color:
-        colored_host = host_color + host + COLORS.end
-    else:
-        if message_color:
-            colored_host = message_color + host + COLORS.end
-        else:
-            colored_host = host
-    if message_color:
-        colored_message = message_color + message + COLORS.end
-    else:
-        if host_color:
-            colored_message = host_color + message + COLORS.end
-        else:
-            colored_message = message
+    if __ds_host_name_parse.findall(host):
+        site_preamble, site_number = __ds_host_name_parse.findall()[0]
+        host = "{0}{1:<4d}".format(site_preamble, site_preamble)
 
-    if print_lock: print_lock.acquire()
+    if host_color and message_color:
+        colored_host = host_color + host + COLORS.end
+        colored_message = message_color + message + COLORS.end
+    elif host_color:
+        colored_host = host_color + host + COLORS.end
+        colored_message = host_color + message_color + COLORS.end
+    elif message_color:
+        colored_host = host
+        colored_message = message_color + message_color + COLORS.end
+    else:
+        colored_host = host
+        colored_message = message_color
+
+    if print_lock:
+        try:
+            print_lock.acquire()
+        except:
+            pass
+
     print print_message_format.format(colored_host, colored_message)
-    if print_lock: print_lock.release()
+
+    if print_lock:
+        try:
+            print_lock.release()
+        except:
+            pass
     if log_file_name:
         try:
             with open(log_file_name, 'a') as log_file:

@@ -55,6 +55,7 @@ primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECAS
 RETRY_CONNECTION_LIMIT = 5
 FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
 
+
 def post_result(result, queu=None, log_file_name=None):
     if queu:
         queu.put(result)
