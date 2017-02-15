@@ -283,7 +283,7 @@ def update_ds(ds_name,
     # Copy new sw to ds
     print_for_ds(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
     try:
-        node.clear_buffer()
+        node.net_connect.clear_buffer()
         time.sleep(1)
         scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
     except Exception as e:
