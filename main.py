@@ -106,7 +106,7 @@ def update_ds(ds_name,
             print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
-        except Exception:
+        except :
             if tray != RETRY_CONNECTION_LIMIT - 1:
                 print_for_ds(ds_name, 'Cannot connect! Try reconnect...', io_lock, log_file_name, color)
             else:
@@ -288,6 +288,11 @@ def update_ds(ds_name,
         scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
     except Exception as e:
         print_for_ds(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
+        print_for_ds(ds_name,
+                     "!*! Try copy manual: scp {0}* {1}:cf1:/{2}/".format(new_SW[node.hw_ver], ds_name, folder_for_SW),
+                     io_lock,
+                     None,
+                     color, COLORS.info)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
