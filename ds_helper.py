@@ -69,7 +69,7 @@ def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=
 
     if __ds_host_name_parse.findall(host):
         site_preamble, site_number = __ds_host_name_parse.findall(host)[0]
-        host = "{0}{1:<4d}".format(site_preamble, site_preamble)
+        host = "{0}{1:<4d}".format(site_preamble, int(site_number))
 
     if host_color and message_color:
         colored_host = host_color + host + COLORS.end
