@@ -33,9 +33,7 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
                         password=str(_password),
                         port=22,
                         timeout=20,
-                        allow_agent=False,
-                        compress=False,
-                        banner_timeout=20)
+                        allow_agent=True)
             break
         except AuthenticationException as e:
             # Try reconnect
