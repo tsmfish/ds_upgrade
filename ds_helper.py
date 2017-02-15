@@ -68,7 +68,7 @@ __ds_host_name_parse = re.compile(r'\b([A-Z]+?\d+?-[A-Z]{3})(\d+?)\b', re.IGNORE
 def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=None, message_color=None):
 
     if __ds_host_name_parse.findall(host):
-        site_preamble, site_number = __ds_host_name_parse.findall()[0]
+        site_preamble, site_number = __ds_host_name_parse.findall(host)[0]
         host = "{0}{1:<4d}".format(site_preamble, site_preamble)
 
     if host_color and message_color:
