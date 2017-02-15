@@ -76,13 +76,13 @@ def print_for_ds(host, message, print_lock=None, log_file_name=None, host_color=
         colored_message = message_color + message + COLORS.end
     elif host_color:
         colored_host = host_color + host + COLORS.end
-        colored_message = host_color + message_color + COLORS.end
+        colored_message = host_color + message + COLORS.end
     elif message_color:
         colored_host = host
         colored_message = message_color + message_color + COLORS.end
     else:
         colored_host = host
-        colored_message = message_color
+        colored_message = message
 
     if print_lock:
         try:
