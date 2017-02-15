@@ -283,7 +283,7 @@ def update_ds(ds_name,
     # Copy new sw to ds
     print_for_ds(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
     try:
-        scp_copy(node.net_connect.remote_conn_pre.get_transport(), new_SW[node.hw_ver], folder_for_SW, io_lock)
+        scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
     except Exception as e:
         print_for_ds(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)

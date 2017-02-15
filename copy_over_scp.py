@@ -18,12 +18,27 @@ FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
 RETRY_COUNT = 5
 
 
-def scp_copy(ssh_transport, what, where, io_lock=None):
+def scp_copy(ds, user, _password, what, where, io_lock=None):
     """Function for recursive copy directory to ds
     :parameter what='folder/' copy content of this folder to remove folder (where)
     :parameter what='folder' copy this folder to remove with saving name
     :exception Exception() if AuthenticationException occurred 5-times
     """
+    ssh = SSHClient()
+    ssh.set_missing_host_key_policy(AutoAddPolicy())
+    for i in range(RETRY_COUNT):
+        try:
+            ssh.connect(ds, username=user, password=str(_password), port=22)
+            break
+        except AuthenticationException as e:
+            # Try reconnect
+            if i < RETRY_COUNT - 1:
+                print_for_ds(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, COLORS.info)
+                time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[i])
+            else:
+                print_for_ds(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, COLORS.error)
+    else:
+        raise Exception('Fail to copy SW to {0}'.format(ds))
 
-    with SCPClient(ssh_transport) as scp:
+    with SCPClient(ssh.get_transport()) as scp:
         scp.put(what, where, recursive=True)
