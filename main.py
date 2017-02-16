@@ -11,7 +11,7 @@ from Queue import Queue
 
 from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnreachable
 from copy_over_scp import scp_copy
-from ds_helper import COLORS, print_for_ds, print_message_format, extract
+from ds_helper import COLORS, print_for_ds, print_message_format, extract, is_contains
 
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
 
@@ -51,6 +51,7 @@ ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
 file_size_pattern = re.compile(r'\b\d{2}\/\d{2}\/\d{4}\s+?\d{2}:\d{2}[ap]\s+?(\d+?)\s+?')
 sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
+comment_line_pattern = re.compile(r'^[#/]\S', re.DOTALL|re.MULTILINE)
 
 RETRY_CONNECTION_LIMIT = 5
 FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
@@ -421,7 +422,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw_version),
                                    usage="usage: %prog [-y] [-n] [-l] [-f <DS list file> | ds ds ds ...]")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
-                      help="file with DS list", metavar="FILE")
+                      help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
                       help="force remove unused SW images (both/boot)",
                       action="store_true", default=False)
@@ -442,7 +443,8 @@ if __name__ == "__main__":
         try:
             with open(options.ds_list_file_name) as ds_list_file:
                 for line in ds_list_file.readlines():
-                    ds_list_raw.append(extract(ds_name_pattern, line))
+                    if not is_contains(comment_line_pattern, line) and extract(ds_name_pattern, line):
+                        ds_list_raw.append(extract(ds_name_pattern, line))
         except IOError as e:
             print COLORS.error+"Error while open file: {file}".format(file=options.ds_list_file_name)+COLORS.end
             print COLORS.error+str(e)+COLORS.end
