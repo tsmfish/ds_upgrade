@@ -246,9 +246,8 @@ def update_ds(ds_name,
                         answer = raw_input(color+print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f))+COLORS.end)
                     else:
                         answer = raw_input(print_message_format.format(ds_name, "*** Delete {0} (y/n)? ".format(f)))
-                except Exception:
+                except :
                     answer = 'n'
-                    pass
                 if io_lock: io_lock.release()
             if force_delete or answer.lower() == 'y':
                 command_send_result = node.send('file delete {0} force'.format(f))
@@ -291,7 +290,7 @@ def update_ds(ds_name,
         print_for_ds(ds_name,
                      "!*! Try copy manual: scp {0}* {1}:cf1:/{2}/".format(new_SW[node.hw_ver], ds_name, folder_for_SW),
                      io_lock,
-                     None,
+                     log_file_name,
                      color, COLORS.info)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
