@@ -435,7 +435,7 @@ if __name__ == "__main__":
     parser.add_option("-c", "--color", dest="colorize",
                       help="Colorize output",
                       action="store_true", default=False)
-    parser.add_option("-pw", "--password", dest="secret",
+    parser.add_option("--pw", "--password", dest="secret",
                       help="encoded password",
                       type="string", default="")
 
