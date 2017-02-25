@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8
-
+import base64
 import getpass
 import optparse
 import random
@@ -435,6 +435,9 @@ if __name__ == "__main__":
     parser.add_option("-c", "--color", dest="colorize",
                       help="Colorize output",
                       action="store_true", default=False)
+    parser.add_option("-pw", "--password", dest="secret",
+                      help="encoded password",
+                      type="string", default="")
 
     (options, args) = parser.parse_args()
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
@@ -462,7 +465,10 @@ if __name__ == "__main__":
         exit()
 
     user = getpass.getuser()
-    secret = getpass.getpass('Password for DS:')
+    if options.secret:
+        secret = base64.b64decode(options.secret).encode("ascii")
+    else:
+        secret = getpass.getpass('Password for DS:')
 
     print COLORS.info+"Start running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
     start_time = time.time()
