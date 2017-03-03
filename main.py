@@ -11,7 +11,7 @@ from Queue import Queue
 
 from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnreachable
 from copy_over_scp import scp_copy
-from ds_helper import COLORS, print_for_ds, print_message_format, extract, is_contains
+from ds_helper import COLORS, ds_print, print_message_format, extract, is_contains, ds_compare
 
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
 
@@ -90,28 +90,28 @@ def update_ds(ds_name,
     node = DS(ds_name, user, password)
 
     # Connect and get basic inform
-    print_for_ds(ds_name,
+    ds_print(ds_name,
                  '=' * 8 + ' Start process for {ds} '.format(ds=node.ip) + '=' * 8,
-                 io_lock,
-                 log_file_name,
-                 color)
+             io_lock,
+             log_file_name,
+             color)
     for tray in range(RETRY_CONNECTION_LIMIT):
         try:
             node.conn()
             break
         except ExceptionWrongPassword:
-            print_for_ds(ds_name, 'Wrong password', io_lock, log_file_name, color, COLORS.error)
+            ds_print(ds_name, 'Wrong password', io_lock, log_file_name, color, COLORS.error)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
         except ExceptionHostUnreachable:
-            print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
+            ds_print(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
         except :
             if tray != RETRY_CONNECTION_LIMIT - 1:
-                print_for_ds(ds_name, 'Cannot connect! Try reconnect...', io_lock, log_file_name, color)
+                ds_print(ds_name, 'Cannot connect! Try reconnect...', io_lock, log_file_name, color)
             else:
-                print_for_ds(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
+                ds_print(ds_name, 'Cannot connect!', io_lock, log_file_name, color, COLORS.error)
                 post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
                 return
         time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[tray])
@@ -120,12 +120,12 @@ def update_ds(ds_name,
 
     # Check node SW version
     if node.sw_ver.lower() == target_sw_version.lower():
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      "*** Running SW version already \"{0}\"".format(node.sw_ver),
-                     io_lock,
-                     log_file_name,
-                     color,
-                     COLORS.info)
+                 io_lock,
+                 log_file_name,
+                 color,
+                 COLORS.info)
         post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
         return
 
@@ -133,87 +133,87 @@ def update_ds(ds_name,
     primary_img = node.check_verion(node.prime_image)
     if primary_img:
         if primary_img[1] == node.hw_ver:
-            print_for_ds(ds_name,
+            ds_print(ds_name,
                          '*** Primary image good and has version {0}'.format(primary_img[0]),
-                         io_lock,
-                         log_file_name,
-                         color)
-            print_for_ds(ds_name, '*** ' + node.prime_image, io_lock, log_file_name, color)
+                     io_lock,
+                     log_file_name,
+                     color)
+            ds_print(ds_name, '*** ' + node.prime_image, io_lock, log_file_name, color)
         else:
-            print_for_ds(ds_name, '!!! Problem with primary image', io_lock, log_file_name, color, COLORS.error)
-            print_for_ds(ds_name, '**! ' + node.prime_image, io_lock, log_file_name, color)
+            ds_print(ds_name, '!!! Problem with primary image', io_lock, log_file_name, color, COLORS.error)
+            ds_print(ds_name, '**! ' + node.prime_image, io_lock, log_file_name, color)
             post_result({NAME: ds_name, RESULT: FATAL}, result_queue, log_file_name)
             return
 
         if primary_img[0] != node.sw_ver:
-            print_for_ds(ds_name,
+            ds_print(ds_name,
                          '!!! Version of the bof primary-image is {0} current running {1}.'
-                         .format(primary_img[0], node.sw_ver),
-                         io_lock,
-                         log_file_name,
-                         color,
-                         COLORS.error)
-            print_for_ds(ds_name,
+                     .format(primary_img[0], node.sw_ver),
+                     io_lock,
+                     log_file_name,
+                     color,
+                     COLORS.error)
+            ds_print(ds_name,
                          '!!! May be this switch already prepare for update!',
-                         io_lock,
-                         log_file_name,
-                         color)
+                     io_lock,
+                     log_file_name,
+                     color)
 
             # check file sizes
             ds_type = extract(ds_type_pattern, node.send(b'show version'))
             primary_bof_image = extract(primary_bof_image_pattern, node.send(b'show bof'))
             primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
             if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
-                print_for_ds(ds_name,
+                ds_print(ds_name,
                              '**! {0} file has size {1} and this is - WRONG!'
-                             .format(primary_bof_image, primary_bof_image_size),
-                             io_lock,
-                             log_file_name,
-                             color,
-                             COLORS.error)
+                         .format(primary_bof_image, primary_bof_image_size),
+                         io_lock,
+                         log_file_name,
+                         color,
+                         COLORS.error)
             else:
-                print_for_ds(ds_name,
+                ds_print(ds_name,
                              '*** {0} file has correct size.'
-                             .format(primary_bof_image, primary_bof_image_size),
-                             io_lock,
-                             log_file_name,
-                             color)
+                         .format(primary_bof_image, primary_bof_image_size),
+                         io_lock,
+                         log_file_name,
+                         color)
 
             boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
             if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
-                print_for_ds(ds_name,
+                ds_print(ds_name,
                              '**! {0} file has size {1} and this is - WRONG!'
-                             .format('boot.tim', boot_tim_file_size),
-                             io_lock,
-                             log_file_name,
-                             color,
-                             COLORS.error)
+                         .format('boot.tim', boot_tim_file_size),
+                         io_lock,
+                         log_file_name,
+                         color,
+                         COLORS.error)
             else:
-                print_for_ds(ds_name,
+                ds_print(ds_name,
                              '*** {0} file has correct size.'
-                             .format('boot.tim', boot_tim_file_size),
-                             io_lock,
-                             log_file_name,
-                             color)
+                         .format('boot.tim', boot_tim_file_size),
+                         io_lock,
+                         log_file_name,
+                         color)
 
             post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
             return
 
     # Write primary image to secondary in bof
-    print_for_ds(ds_name, '*** Write primary-image to secondary in bof file', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Write primary-image to secondary in bof file', io_lock, log_file_name, color)
     cmd = 'bof secondary-image {0}'.format(node.prime_image)
-    print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
-    print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
+    ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
+    ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
 
     # Find old soft
-    print_for_ds(ds_name, '*** Finding all sw in cf1:/...', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Finding all sw in cf1:/...', io_lock, log_file_name, color)
     old_boots = node.find_files('boot.tim')
 
     try:
         # remove from delete list file cf1:/boot.tim
         old_boots.remove('cf1:/boot.tim')
     except ValueError:
-        print_for_ds(ds_name, '**! cf1:/boot.tim Not exist!', io_lock, log_file_name, color)
+        ds_print(ds_name, '**! cf1:/boot.tim Not exist!', io_lock, log_file_name, color)
 
     try:
         # remove from delete list file <primary image BOF path>/boot.tim
@@ -229,14 +229,14 @@ def update_ds(ds_name,
         try:
             old_both.remove(node.prime_image.replace('\\', '/')+"both.tim")
         except ValueError:
-            print_for_ds(ds_name,
-                         '**! '+node.prime_image.replace('\\', '/')+"both.tim+"+' Not exist!',
-                         io_lock,
-                         log_file_name,
-                         color)
+            ds_print(ds_name,
+                         '**! ' + node.prime_image.replace('\\', '/') +"both.tim+" +' Not exist!',
+                     io_lock,
+                     log_file_name,
+                     color)
 
     # Remove old SW
-    print_for_ds(ds_name, '*** Removing old, not used SW', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Removing old, not used SW', io_lock, log_file_name, color)
     for files in (old_boots, old_both):
         for f in files:
             if not force_delete:
@@ -252,89 +252,89 @@ def update_ds(ds_name,
                 if io_lock: io_lock.release()
             if force_delete or answer.lower() == 'y':
                 command_send_result = node.send('file delete {0} force'.format(f))
-                print_for_ds(ds_name, '*** ' + command_send_result, io_lock, log_file_name, color)
+                ds_print(ds_name, '*** ' + command_send_result, io_lock, log_file_name, color)
 
     # Delete empty folders
     emt_folders = node.find_empty_folders()
     if emt_folders:
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '*** Deleting empty folders {0}'.format(','.join(emt_folders)),
-                     io_lock,
-                     log_file_name,
-                     color)
+                 io_lock,
+                 log_file_name,
+                 color)
         for folder in emt_folders:
             command_send_result = node.send('file rd {0} force'.format(folder))
-            print_for_ds(ds_name, "*** " + command_send_result, io_lock, log_file_name, color)
+            ds_print(ds_name, "*** " + command_send_result, io_lock, log_file_name, color)
 
     # Check free space
     mb = node.free_space()
-    print_for_ds(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=node.ip), io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Free {mb}MB on {ip}'.format(mb=mb, ip=node.ip), io_lock, log_file_name, color)
     if mb < free_space_limit:
-        print_for_ds(ds_name, '!!! Not enough space for continue', io_lock, log_file_name, color, COLORS.error)
+        ds_print(ds_name, '!!! Not enough space for continue', io_lock, log_file_name, color, COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     # Make image folder
-    print_for_ds(ds_name, '*** Try to create directory \"images\"', io_lock, log_file_name, color)
-    print_for_ds(ds_name, '*** #file md cf1:\{0}'.format(folder_for_SW), io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Try to create directory \"images\"', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** #file md cf1:\{0}'.format(folder_for_SW), io_lock, log_file_name, color)
     node.send('file md cf1:\images')
     node.send('file md cf1:\{0}'.format(folder_for_SW))
 
     # Copy new sw to ds
-    print_for_ds(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
     try:
         node.net_connect.clear_buffer()
         time.sleep(1)
         scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
     except Exception as e:
-        print_for_ds(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
-        print_for_ds(ds_name,
+        ds_print(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
+        ds_print(ds_name,
                      "!*! Try copy manual: scp {0}* {1}:cf1:/{2}/".format(new_SW[node.hw_ver], ds_name, folder_for_SW),
-                     io_lock,
-                     log_file_name,
-                     color, COLORS.info)
+                 io_lock,
+                 log_file_name,
+                 color, COLORS.info)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     # Check free space
     mb = node.free_space()
-    print_for_ds(ds_name,
+    ds_print(ds_name,
                  '*** Free {mb}MB on {ip} after copy new SW'.format(mb=mb, ip=node.ip),
-                 io_lock,
-                 log_file_name,
-                 color)
+             io_lock,
+             log_file_name,
+             color)
 
     # Check new SW and write to bof.cfg
-    print_for_ds(ds_name, '*** Write new SW to primary-image', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Write new SW to primary-image', io_lock, log_file_name, color)
     if node.check_verion(new_primary_img)[1] == node.hw_ver:
         cmd = 'bof primary-image {0}'.format(new_primary_img).replace('/', '\\')
-        print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
-        print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
+        ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
+        ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
     else:
-        print_for_ds(ds_name, '!!! New both.tim not from this platform', io_lock, log_file_name, color, COLORS.error)
+        ds_print(ds_name, '!!! New both.tim not from this platform', io_lock, log_file_name, color, COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     # Save bof and config
-    print_for_ds(ds_name, '*** Save new bof and config', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Save new bof and config', io_lock, log_file_name, color)
     node.save_configs()
 
     # Change boot.tim in root directory
-    print_for_ds(ds_name,
+    ds_print(ds_name,
                  '*** Change file cf1:/boot.tim to new ({0})'.format(new_boot_file),
-                 io_lock,
-                 log_file_name,
-                 color)
+             io_lock,
+             log_file_name,
+             color)
 
     if node.check_verion(new_boot_file)[1] == node.hw_ver:
         # remove read only attribute
         command_send_result = node.send('file attrib -r cf1:/boot.tim')
-        print_for_ds(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)
+        ds_print(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)
         cmd = 'file copy {0} cf1:/boot.tim force'.format(new_boot_file)
-        print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
+        ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         node.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
-        print_for_ds(ds_name, '!!! New boot.tim not from this platform', io_lock, log_file_name, color, COLORS.error)
+        ds_print(ds_name, '!!! New boot.tim not from this platform', io_lock, log_file_name, color, COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
@@ -344,77 +344,77 @@ def update_ds(ds_name,
     primary_bof_image_print = node.send(b'file version ' + primary_bof_image)
     primary_bof_image_type = extract(ds_type_pattern, primary_bof_image_print)
     if primary_bof_image_type.lower() != ds_type.lower():
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '!!! Primary BOF type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
-                     .format(primary_bof_image_type, ds_type),
-                     io_lock,
-                     log_file_name,
-                     color,
-                     COLORS.error)
+                 .format(primary_bof_image_type, ds_type),
+                 io_lock,
+                 log_file_name,
+                 color,
+                 COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     primary_bof_image_version = extract(sw_version_pattern, primary_bof_image_print)
     if primary_bof_image_version.lower() != target_sw_version.lower():
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '**! Primary BOF SW version: {0}, target script SW version: {1}'
-                     .format(primary_bof_image_version, target_sw_version),
-                     io_lock,
-                     log_file_name,
-                     color)
+                 .format(primary_bof_image_version, target_sw_version),
+                 io_lock,
+                 log_file_name,
+                 color)
 
     boot_tim_file_print = node.send(b'file version boot.tim')
     boot_tim_type = extract(ds_type_pattern, boot_tim_file_print)
     if boot_tim_type.lower() != ds_type.lower():
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '!!! boot.tim type: {0}, ds has type: {1}. Configuration INCONSISTENT!!!.'
-                     .format(boot_tim_type, ds_type),
-                     io_lock,
-                     log_file_name,
-                     color,
-                     COLORS.error)
+                 .format(boot_tim_type, ds_type),
+                 io_lock,
+                 log_file_name,
+                 color,
+                 COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     boot_tim_version = extract(sw_version_pattern, boot_tim_file_print)
     if boot_tim_version.lower() != target_sw_boot_version.lower():
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '**! boot.tim SW version: {0}, target script SW version: {1}'
-                     .format(boot_tim_version, target_sw_boot_version),
-                     io_lock,
-                     log_file_name,
-                     color)
+                 .format(boot_tim_version, target_sw_boot_version),
+                 io_lock,
+                 log_file_name,
+                 color)
 
     # check file sizes
     primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
     if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '**! {0} file has size {1} and this is - WRONG!'
-                     .format(primary_bof_image, primary_bof_image_size),
-                     io_lock,
-                     log_file_name,
-                     color,
-                     COLORS.error)
+                 .format(primary_bof_image, primary_bof_image_size),
+                 io_lock,
+                 log_file_name,
+                 color,
+                 COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
     boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
     if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
-        print_for_ds(ds_name,
+        ds_print(ds_name,
                      '**! {0} file has size {1} and this is - WRONG!'
-                     .format('boot.tim', boot_tim_file_size),
-                     io_lock,
-                     log_file_name,
-                     color,
-                     COLORS.error)
+                 .format('boot.tim', boot_tim_file_size),
+                 io_lock,
+                 log_file_name,
+                 color,
+                 COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
         return
 
-    print_for_ds(ds_name,
+    ds_print(ds_name,
                  '=' * 8 + ' Finish process for {ds} '.format(ds=node.ip) + '=' * 8,
-                 io_lock,
-                 log_file_name,
-                 COLORS.ok)
+             io_lock,
+             log_file_name,
+             COLORS.ok)
     post_result({NAME: ds_name, RESULT: COMPLETE}, result_queue, log_file_name)
 
 
@@ -505,7 +505,7 @@ if __name__ == "__main__":
                                   log_to_file=options.log_to_file,
                                   color=ds_colors[ds_name])
                     except Exception as e:
-                        print_for_ds(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
+                        ds_print(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
                         result_queue.put({RESULT: FATAL, NAME: ds_name})
                     current_time = time.time()
                     handled_ds_count += 1
@@ -571,17 +571,17 @@ if __name__ == "__main__":
             else:
                 line_complete, line_temporary, line_fatal = '', '', ''
 
-            for ds in sorted(result[COMPLETE]):
+            for ds in sorted(result[COMPLETE], ds_compare):
                 if options.colorize and not options.no_threads:
                     line_complete += ds_colors[ds] + ds + COLORS.end + " "
                 else:
                     line_complete += ds + " "
-            for ds in sorted(result[TEMPORARY]):
+            for ds in sorted(result[TEMPORARY], ds_compare):
                 if options.colorize and not options.no_threads:
                     line_temporary += ds_colors[ds] + ds + COLORS.end + " "
                 else:
                     line_temporary += ds + " "
-            for ds in sorted(result[FATAL]):
+            for ds in sorted(result[FATAL], ds_compare):
                 if options.colorize and not options.no_threads:
                     line_fatal += ds_colors[ds] + ds + COLORS.end + " "
                 else:

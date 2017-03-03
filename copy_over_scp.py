@@ -11,7 +11,7 @@ sys.path.insert(1, '/home/butko/.local/lib/python2.6/site-packages/scp-0.10.2-py
 
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 from scp import SCPClient
-from ds_helper import COLORS, print_for_ds
+from ds_helper import COLORS, ds_print
 
 
 FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
@@ -39,10 +39,10 @@ def scp_copy(ds, user, _password, what, where, io_lock=None):
         except Exception as e:
             # Try reconnect
             if i < RETRY_COUNT - 1:
-                print_for_ds(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, None, COLORS.info)
+                ds_print(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, None, COLORS.info)
                 time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[i])
             else:
-                print_for_ds(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, None, COLORS.error)
+                ds_print(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, None, COLORS.error)
                 raise Exception('Fail to copy SW to {0}'.format(ds))
 
     with SCPClient(ssh.get_transport(), socket_timeout=20) as scp:
