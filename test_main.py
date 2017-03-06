@@ -456,7 +456,8 @@ def update_ds(ds_name,
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw_version),
-                                   usage="usage: %prog [-y] [-n] [-l] [-f <DS list file> | ds ds ds ...]")
+                                   usage="usage: %prog [options] [ds ds ...]",
+                                   version="1.1.184")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
