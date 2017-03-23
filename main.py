@@ -45,20 +45,20 @@ sw = {
 
     SW_R13: {
         BOF: 'TiMOS-B-7.0.R13',
-        BOOT: 'TiMOS-L-7.0.R13'
-    },
-    folder_on_ds: 'images/TiMOS-7.0.R13',
-    boot_file: 'cf1:/images/TiMOS-7.0.R13/boot.tim',
-    bof_file: 'cf1:/images/TiMOS-7.0.R13/both.tim',
-    sasX: {
-        source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
-        boot_file: '8430496',
-        bof_file: '44336672'
-    },
-    sasM: {
-        source_folder: '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/',
-        boot_file: '7486880',
-        bof_file: '43364928'
+        BOOT: 'TiMOS-L-7.0.R13',
+        folder_on_ds: 'images/TiMOS-7.0.R13',
+        boot_file: 'cf1:/images/TiMOS-7.0.R13/boot.tim',
+        bof_file: 'cf1:/images/TiMOS-7.0.R13/both.tim',
+        sasX: {
+            source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
+            boot_file: '8430496',
+            bof_file: '44336672'
+        },
+        sasM: {
+            source_folder: '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/',
+            boot_file: '7486880',
+            bof_file: '43364928'
+        },
     }
 }
 
@@ -225,7 +225,7 @@ def update_ds(ds_name,
     ds_print(ds_name, '*** Write primary-image to secondary in bof file', io_lock, log_file_name, color)
     cmd = 'bof secondary-image {0}'.format(node.prime_image)
     ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
-    ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
+    node.send(cmd)
 
     # Find old soft
     ds_print(ds_name, '*** Finding all sw in cf1:/...', io_lock, log_file_name, color)
@@ -331,7 +331,7 @@ def update_ds(ds_name,
     if node.check_version(sw[target_sw][bof_file])[1].lower() == node.hw_ver.lower():
         cmd = 'bof primary-image {0}'.format(sw[target_sw][bof_file]).replace('/', '\\')
         ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
-        ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
+        node.send(cmd)
     else:
         ds_print(ds_name, '!!! New both.tim not from this platform', io_lock, log_file_name, color, COLORS.error)
         post_result({NAME: ds_name, RESULT: TEMPORARY}, result_queue, log_file_name)
@@ -350,8 +350,7 @@ def update_ds(ds_name,
 
     if node.check_version(sw[target_sw][boot_file])[1].lower() == node.hw_ver.lower():
         # remove read only attribute
-        command_send_result = node.send('file attrib -r cf1:/boot.tim')
-        ds_print(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)
+        node.send('file attrib -r cf1:/boot.tim')
         cmd = 'file copy {0} cf1:/boot.tim force'.format(sw[target_sw][boot_file])
         ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         node.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
@@ -444,7 +443,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.191")
+                                   version="1.1.192")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
