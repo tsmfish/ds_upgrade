@@ -421,8 +421,7 @@ def update_ds(ds_name,
 
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw_version),
-                                   usage="usage: %prog [options] [ds ds ds ...]",
-                                   version="v 1.1.185")
+                                   usage="usage: %prog [-y] [-n] [-l] [-f <DS list file> | ds ds ds ...]")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
@@ -434,9 +433,9 @@ if __name__ == "__main__":
     parser.add_option("-l", "--log-to-file", dest="log_to_file",
                       help="enable logging to file yymmdd_hhmmss_ds-name.log",
                       action="store_true", default=False)
-    parser.add_option("-c", "--no-color", dest="colorize",
-                      help="Un colorize output",
-                      action="store_false", default=True)
+    parser.add_option("-c", "--color", dest="colorize",
+                      help="Colorize output",
+                      action="store_true", default=False)
     parser.add_option("--pw", "--password", dest="secret",
                       help="encoded password",
                       type="string", default="")
