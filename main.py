@@ -15,13 +15,13 @@ from ds_helper import COLORS, ds_print, print_message_format, extract, is_contai
 
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
 
-target_sw_version = 'TiMOS-B-7.0.R13'
-target_sw_boot_version = 'TiMOS-L-7.0.R13'
+target_sw_version = 'TiMOS-B-7.0.R9'
+target_sw_boot_version = 'TiMOS-L-7.0.R9'
 
 free_space_limit = 56   # in Mbytes
 random_wait_time = 5    # in seconds
 
-folder_for_SW = 'images/TiMOS-7.0.R13'
+folder_for_SW = 'images/TiMOS-7.0.R9'
 new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
 new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
 
@@ -31,17 +31,17 @@ NAME, RESULT = 'name', 'result'
 
 
 new_SW = {
-    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
-    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/'}
+    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R9/',
+    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R9/'}
 
 file_sizes = {  # should be STRING, for comparision with re.pastern catches filed
     'SAS-X': {
-        'boot.tim': '8430496',
-        'both.tim': '44336672'
+        'boot.tim': '8426112',
+        'both.tim': '44325568'
     },
     'SAS-M': {
-        'boot.tim': '7486880',
-        'both.tim': '43364928'
+        'boot.tim': '7490464',
+        'both.tim': '43352608'
     }
 }
 
