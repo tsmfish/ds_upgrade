@@ -186,7 +186,7 @@ def update_ds(ds_name,
         return
 
     # Check primary image
-    primary_img = node.check_verion(node.prime_image)
+    primary_img = node.check_version(node.prime_image)
     if primary_img:
         if primary_img[1] == node.hw_ver:
             print_for_ds(ds_name,
@@ -346,7 +346,7 @@ def update_ds(ds_name,
 
     # Check new SW and write to bof.cfg
     print_for_ds(ds_name, '*** Write new SW to primary-image', io_lock, log_file_name, color)
-    if node.check_verion(new_primary_img)[1] == node.hw_ver:
+    if node.check_version(new_primary_img)[1] == node.hw_ver:
         cmd = 'bof primary-image {0}'.format(new_primary_img).replace('/', '\\')
         print_for_ds(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         print_for_ds(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
@@ -366,7 +366,7 @@ def update_ds(ds_name,
                  log_file_name,
                  color)
 
-    if node.check_verion(new_boot_file)[1] == node.hw_ver:
+    if node.check_version(new_boot_file)[1] == node.hw_ver:
         # remove read only attribute
         command_send_result = node.send('file attrib -r cf1:/boot.tim')
         print_for_ds(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)

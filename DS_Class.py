@@ -84,7 +84,7 @@ class DS(object):
 
         return self.sw_ver, self.hw_ver, self.prime_image, self.second_image, self.config
 
-    def check_verion(self, _file):
+    def check_version(self, _file):
         """Check file version"""
         if self.net_connect:
             out = self.net_connect.send_command('file version {0}'.format(_file))

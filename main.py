@@ -13,38 +13,60 @@ from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnreachable
 from copy_over_scp import scp_copy
 from ds_helper import COLORS, ds_print, print_message_format, extract, is_contains, ds_compare
 
+
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
 
-target_sw_version = 'TiMOS-B-7.0.R9'
-target_sw_boot_version = 'TiMOS-L-7.0.R9'
+SW_R9 = 'TiMOS-B-7.0.R9'
+SW_R13 = 'TiMOS-B-7.0.R13'
+
+target_sw = SW_R9  # it is default value, it can be overwrite by using script options --R9 or --R13
+
+BOF, BOOT, folder_on_ds, boot_file, bof_file, source_folder = 'bof', 'boot', 'folder on ds', 'boot.tim', 'both.tim', 'source folder'
+dsType, sasX, sasM = 'type', 'SAS-X', 'SAS-M'
+
+sw = {
+    SW_R9: {
+        BOF: 'TiMOS-B-7.0.R9',
+        BOOT: 'TiMOS-L-7.0.R9',
+        folder_on_ds: 'images/TiMOS-7.0.R9',
+        boot_file: 'cf1:/TiMOS-7.0.R9/boot.tim',
+        bof_file: 'cf1:/TiMOS-7.0.R9/both.tim',
+        sasX: {
+            source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R9/',
+            boot_file: '8426112',
+            bof_file: '44325568'
+        },
+        sasM: {
+            source_folder: '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R9/',
+            boot_file: '7490464',
+            bof_file: '43352608'
+        }
+    },
+
+    SW_R13: {
+        BOF: 'TiMOS-B-7.0.R13',
+        BOOT: 'TiMOS-L-7.0.R13'
+    },
+    folder_on_ds: 'images/TiMOS-7.0.R13',
+    boot_file: 'cf1:/TiMOS-7.0.R13/boot.tim',
+    bof_file: 'cf1:/TiMOS-7.0.R13/both.tim',
+    sasX: {
+        source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
+        boot_file: '8430496',
+        bof_file: '44336672'
+    },
+    sasM: {
+        source_folder: '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R13/',
+        boot_file: '7486880',
+        bof_file: '43364928'
+    }
+}
 
 free_space_limit = 56   # in Mbytes
 random_wait_time = 5    # in seconds
 
-folder_for_SW = 'images/TiMOS-7.0.R9'
-new_boot_file = 'cf1:/{0}/boot.tim'.format(folder_for_SW)
-new_primary_img = 'cf1:/{0}/both.tim'.format(folder_for_SW)
-
-
 COMPLETE, FATAL, TEMPORARY = 'complete', 'fatal', 'temporary'
 NAME, RESULT = 'name', 'result'
-
-
-new_SW = {
-    'SAS-X': '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R9/',
-    'SAS-M': '/home/mpls/soft/7210-SAS-M-TiMOS-7.0.R9/'}
-
-file_sizes = {  # should be STRING, for comparision with re.pastern catches filed
-    'SAS-X': {
-        'boot.tim': '8426112',
-        'both.tim': '44325568'
-    },
-    'SAS-M': {
-        'boot.tim': '7490464',
-        'both.tim': '43352608'
-    }
-}
-
 
 ds_name_pattern = re.compile(r'ds\d+?-[0-9a-z]+\b', re.IGNORECASE)
 ds_type_pattern = re.compile(r'\bSAS-[XM]\b', re.IGNORECASE)
@@ -53,7 +75,7 @@ sw_version_pattern = re.compile(r'TiMOS-\w-\d\.\d\.R\d+?\b', re.IGNORECASE)
 primary_bof_image_pattern = re.compile(r'primary-image\s+?(\S+)\b', re.IGNORECASE)
 comment_line_pattern = re.compile(r'^[#/]\S', re.DOTALL|re.MULTILINE)
 
-RETRY_CONNECTION_LIMIT = 5
+RETRY_CONNECTION_LIMIT = 7
 FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
 
 
@@ -119,7 +141,7 @@ def update_ds(ds_name,
     node.get_base_info()
 
     # Check node SW version
-    if node.sw_ver.lower() == target_sw_version.lower():
+    if node.sw_ver.lower() == sw[target_sw][BOF].lower():
         ds_print(ds_name,
                  "*** Running SW version already \"{0}\"".format(node.sw_ver),
                  io_lock,
@@ -130,7 +152,7 @@ def update_ds(ds_name,
         return
 
     # Check primary image
-    primary_img = node.check_verion(node.prime_image)
+    primary_img = node.check_version(node.prime_image)
     if primary_img:
         if primary_img[1] == node.hw_ver:
             ds_print(ds_name,
@@ -163,7 +185,7 @@ def update_ds(ds_name,
             ds_type = extract(ds_type_pattern, node.send(b'show version'))
             primary_bof_image = extract(primary_bof_image_pattern, node.send(b'show bof'))
             primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
-            if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
+            if primary_bof_image_size != sw[target_sw][ds_type.upper()][bof_file]:
                 ds_print(ds_name,
                          '**! {0} file has size {1} and this is - WRONG!'
                          .format(primary_bof_image, primary_bof_image_size),
@@ -180,7 +202,7 @@ def update_ds(ds_name,
                          color)
 
             boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
-            if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
+            if boot_tim_file_size != sw[target_sw][ds_type.upper()][boot_file]:
                 ds_print(ds_name,
                          '**! {0} file has size {1} and this is - WRONG!'
                          .format('boot.tim', boot_tim_file_size),
@@ -276,20 +298,20 @@ def update_ds(ds_name,
 
     # Make image folder
     ds_print(ds_name, '*** Try to create directory \"images\"', io_lock, log_file_name, color)
-    ds_print(ds_name, '*** #file md cf1:\{0}'.format(folder_for_SW), io_lock, log_file_name, color)
+    ds_print(ds_name, '*** #file md cf1:\{0}'.format(sw[target_sw][folder_on_ds]), io_lock, log_file_name, color)
     node.send('file md cf1:\images')
-    node.send('file md cf1:\{0}'.format(folder_for_SW))
+    node.send('file md cf1:\{0}'.format(sw[target_sw][folder_on_ds]))
 
     # Copy new sw to ds
     ds_print(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
     try:
         node.net_connect.clear_buffer()
         time.sleep(1)
-        scp_copy(node.ip, node.user, node.password, new_SW[node.hw_ver], folder_for_SW, io_lock)
+        scp_copy(node.ip, node.user, node.password, sw[target_sw][node.hw_ver.upper()][source_folder], sw[target_sw][folder_on_ds], io_lock)
     except Exception as e:
         ds_print(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
         ds_print(ds_name,
-                 "!*! Try copy manual: scp {0}* {1}:cf1:/{2}/".format(new_SW[node.hw_ver], ds_name, folder_for_SW),
+                 "!*! Try copy manual: scp {0}* {1}:cf1:/{2}/".format(sw[target_sw][node.hw_ver.upper()][source_folder], ds_name, sw[target_sw][folder_on_ds]),
                  io_lock,
                  log_file_name,
                  color, COLORS.info)
@@ -306,8 +328,8 @@ def update_ds(ds_name,
 
     # Check new SW and write to bof.cfg
     ds_print(ds_name, '*** Write new SW to primary-image', io_lock, log_file_name, color)
-    if node.check_verion(new_primary_img)[1] == node.hw_ver:
-        cmd = 'bof primary-image {0}'.format(new_primary_img).replace('/', '\\')
+    if node.check_version(sw[target_sw][bof_file])[1].lower() == node.hw_ver.lover():
+        cmd = 'bof primary-image {0}'.format(sw[target_sw][bof_file]).replace('/', '\\')
         ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
     else:
@@ -321,16 +343,16 @@ def update_ds(ds_name,
 
     # Change boot.tim in root directory
     ds_print(ds_name,
-             '*** Change file cf1:/boot.tim to new ({0})'.format(new_boot_file),
+             '*** Change file cf1:/boot.tim to new ({0})'.format(sw[target_sw][boot_file]),
              io_lock,
              log_file_name,
              color)
 
-    if node.check_verion(new_boot_file)[1] == node.hw_ver:
+    if node.check_version(sw[target_sw][boot_file])[1].lower() == node.hw_ver.lover():
         # remove read only attribute
         command_send_result = node.send('file attrib -r cf1:/boot.tim')
         ds_print(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)
-        cmd = 'file copy {0} cf1:/boot.tim force'.format(new_boot_file)
+        cmd = 'file copy {0} cf1:/boot.tim force'.format(sw[target_sw][boot_file])
         ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         node.net_connect.send_command(cmd, expect_string='copied.', delay_factor=5)
     else:
@@ -355,10 +377,10 @@ def update_ds(ds_name,
         return
 
     primary_bof_image_version = extract(sw_version_pattern, primary_bof_image_print)
-    if primary_bof_image_version.lower() != target_sw_version.lower():
+    if primary_bof_image_version.lower() != sw[target_sw][BOF].lower():
         ds_print(ds_name,
                      '**! Primary BOF SW version: {0}, target script SW version: {1}'
-                 .format(primary_bof_image_version, target_sw_version),
+                 .format(primary_bof_image_version, sw[target_sw][BOF]),
                  io_lock,
                  log_file_name,
                  color)
@@ -377,17 +399,17 @@ def update_ds(ds_name,
         return
 
     boot_tim_version = extract(sw_version_pattern, boot_tim_file_print)
-    if boot_tim_version.lower() != target_sw_boot_version.lower():
+    if boot_tim_version.lower() != sw[target_sw][BOOT].lower():
         ds_print(ds_name,
                  '**! boot.tim SW version: {0}, target script SW version: {1}'
-                 .format(boot_tim_version, target_sw_boot_version),
+                 .format(boot_tim_version, sw[target_sw][BOOT]),
                  io_lock,
                  log_file_name,
                  color)
 
     # check file sizes
     primary_bof_image_size = extract(file_size_pattern, node.send(b'file dir {0}'.format(primary_bof_image)))
-    if primary_bof_image_size != file_sizes[ds_type.upper()]['both.tim']:
+    if primary_bof_image_size != sw[target_sw][ds_type.upper()][bof_file]:
         ds_print(ds_name,
                  '**! {0} file has size {1} and this is - WRONG!'
                  .format(primary_bof_image, primary_bof_image_size),
@@ -399,7 +421,7 @@ def update_ds(ds_name,
         return
 
     boot_tim_file_size = extract(file_size_pattern, node.send(b'file dir {0}'.format('boot.tim')))
-    if boot_tim_file_size != file_sizes[ds_type.upper()]['boot.tim']:
+    if boot_tim_file_size != sw[target_sw][ds_type.upper()][boot_file]:
         ds_print(ds_name,
                  '**! {0} file has size {1} and this is - WRONG!'
                  .format('boot.tim', boot_tim_file_size),
@@ -420,8 +442,9 @@ def update_ds(ds_name,
 
 
 if __name__ == "__main__":
-    parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw_version),
-                                   usage="usage: %prog [-y] [-n] [-l] [-f <DS list file> | ds ds ds ...]")
+    parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
+                                   usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
+                                   version="1.1.188")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
@@ -431,7 +454,7 @@ if __name__ == "__main__":
                       help="execute nodes one by one sequentially",
                       action="store_true", default=False)
     parser.add_option("-l", "--log-to-file", dest="log_to_file",
-                      help="enable logging to file yymmdd_hhmmss_ds-name.log",
+                      help="enable logging to file {0}".format(log_file_format),
                       action="store_true", default=False)
     parser.add_option("-c", "--color", dest="colorize",
                       help="Colorize output",
@@ -439,8 +462,23 @@ if __name__ == "__main__":
     parser.add_option("--pw", "--password", dest="secret",
                       help="encoded password",
                       type="string", default="")
+    parser.add_option("--r9", "--R9", dest="r9",
+                      help="load SW {0}".format(SW_R9), default=False,
+                      action="store_true")
+    parser.add_option("--r13", "--R13", dest="r13",
+                      help="load SW {0}".format(SW_R13), default=False,
+                      action="store_true")
 
     (options, args) = parser.parse_args()
+
+    if options.r9 and options.r13:
+        parser.error("options --R9 and --R13 are mutually exclusive")
+
+    if options.r9:
+        target_sw = SW_R9
+    if options.r13:
+        target_sw = SW_R13
+
     ds_list_raw = list(extract(ds_name_pattern, ds) for ds in args if extract(ds_name_pattern, ds))
 
     if options.ds_list_file_name:
@@ -471,6 +509,7 @@ if __name__ == "__main__":
     else:
         secret = getpass.getpass('Password for DS:')
 
+    print COLORS.info+"Load SW: {0}".format(COLORS.warning+target_sw+COLORS.info)+COLORS.end
     print COLORS.info+"Start running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
     start_time = time.time()
 
