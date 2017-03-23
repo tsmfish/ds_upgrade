@@ -328,7 +328,7 @@ def update_ds(ds_name,
 
     # Check new SW and write to bof.cfg
     ds_print(ds_name, '*** Write new SW to primary-image', io_lock, log_file_name, color)
-    if node.check_version(sw[target_sw][bof_file])[1].lower() == node.hw_ver.lover():
+    if node.check_version(sw[target_sw][bof_file])[1].lower() == node.hw_ver.lower():
         cmd = 'bof primary-image {0}'.format(sw[target_sw][bof_file]).replace('/', '\\')
         ds_print(ds_name, '*** #{0}'.format(cmd), io_lock, log_file_name, color)
         ds_print(ds_name, '*** {0}'.format(node.send(cmd)), io_lock, log_file_name, color)
@@ -348,7 +348,7 @@ def update_ds(ds_name,
              log_file_name,
              color)
 
-    if node.check_version(sw[target_sw][boot_file])[1].lower() == node.hw_ver.lover():
+    if node.check_version(sw[target_sw][boot_file])[1].lower() == node.hw_ver.lower():
         # remove read only attribute
         command_send_result = node.send('file attrib -r cf1:/boot.tim')
         ds_print(ds_name, '*** {0}'.format(command_send_result), io_lock, log_file_name, color)
@@ -444,7 +444,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.190")
+                                   version="1.1.191")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
