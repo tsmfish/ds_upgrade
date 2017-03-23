@@ -29,8 +29,8 @@ sw = {
         BOF: 'TiMOS-B-7.0.R9',
         BOOT: 'TiMOS-L-7.0.R9',
         folder_on_ds: 'images/TiMOS-7.0.R9',
-        boot_file: 'cf1:/TiMOS-7.0.R9/boot.tim',
-        bof_file: 'cf1:/TiMOS-7.0.R9/both.tim',
+        boot_file: 'cf1:/images/TiMOS-7.0.R9/boot.tim',
+        bof_file: 'cf1:/images/TiMOS-7.0.R9/both.tim',
         sasX: {
             source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R9/',
             boot_file: '8426112',
@@ -48,8 +48,8 @@ sw = {
         BOOT: 'TiMOS-L-7.0.R13'
     },
     folder_on_ds: 'images/TiMOS-7.0.R13',
-    boot_file: 'cf1:/TiMOS-7.0.R13/boot.tim',
-    bof_file: 'cf1:/TiMOS-7.0.R13/both.tim',
+    boot_file: 'cf1:/images/TiMOS-7.0.R13/boot.tim',
+    bof_file: 'cf1:/images/TiMOS-7.0.R13/both.tim',
     sasX: {
         source_folder: '/home/mpls/soft/7210-SAS-X-TiMOS-7.0.R13/',
         boot_file: '8430496',
@@ -303,7 +303,7 @@ def update_ds(ds_name,
     node.send('file md cf1:\{0}'.format(sw[target_sw][folder_on_ds]))
 
     # Copy new sw to ds
-    ds_print(ds_name, '*** Start coping new sw...', io_lock, log_file_name, color)
+    ds_print(ds_name, '*** Start coping new sw at {0}...'.format(time.time()), io_lock, log_file_name, color)
     try:
         node.net_connect.clear_buffer()
         time.sleep(1)
@@ -444,7 +444,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.188")
+                                   version="1.1.189")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
