@@ -273,7 +273,7 @@ def update_ds(ds_name,
                     answer = 'n'
                 if io_lock: io_lock.release()
             if force_delete or answer.lower() == 'y':
-                command_send_result = node.send('file delete {0} force'.format(f))
+                command_send_result = re.sub(r'\.{3}\s*', '', node.send('file delete {0} force'.format(f)))
                 ds_print(ds_name, '*** ' + command_send_result, io_lock, log_file_name, color)
 
     # Delete empty folders
@@ -285,8 +285,7 @@ def update_ds(ds_name,
                  log_file_name,
                  color)
         for folder in emt_folders:
-            command_send_result = node.send('file rd {0} force'.format(folder))
-            ds_print(ds_name, "*** " + command_send_result, io_lock, log_file_name, color)
+            node.send('file rd {0} force'.format(folder))
 
     # Check free space
     mb = node.free_space()
@@ -306,7 +305,7 @@ def update_ds(ds_name,
     ds_print(ds_name, '*** Start coping new sw at {0}...'.format(time.strftime("%H:%M:%S")), io_lock, log_file_name, color)
     try:
         node.net_connect.clear_buffer()
-        time.sleep(1)
+        time.sleep(3)
         scp_copy(node.ip, node.user, node.password, sw[target_sw][node.hw_ver.upper()][source_folder], sw[target_sw][folder_on_ds], io_lock)
     except Exception as e:
         ds_print(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
@@ -443,7 +442,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.192")
+                                   version="1.1.193")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",

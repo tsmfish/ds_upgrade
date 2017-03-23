@@ -57,6 +57,7 @@ class DS(object):
                 'password': self.password,
                 'port': self.port,
                 'verbose': False,
+                'timeout': 15
             })
             self.net_connect.send_command('environment no more')
             logging.debug(u'Connect to {0}'.format(self.ip))
