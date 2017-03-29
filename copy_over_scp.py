@@ -14,11 +14,11 @@ from scp import SCPClient
 from ds_helper import COLORS, ds_print
 
 
-FAIL_CONNECTION_WAIT_INTERVALS = [2, 3, 3, 7, 9, 13, 17, 25, 39]
-RETRY_COUNT = 5
+FAIL_CONNECTION_WAIT_INTERVALS = [3,5,9,17,29,37,47,51]
+RETRY_COUNT = 7
 
 
-def scp_copy(ds, user, _password, what, where, io_lock=None, progress=None):
+def scp_copy(ds, user, _password, what, where, io_lock=None):
     """Function for recursive copy directory to ds
     :parameter what='folder/' copy content of this folder to remove folder (where)
     :parameter what='folder' copy this folder to remove with saving name
@@ -39,11 +39,11 @@ def scp_copy(ds, user, _password, what, where, io_lock=None, progress=None):
         except Exception as e:
             # Try reconnect
             if i < RETRY_COUNT - 1:
-                ds_print(ds, "Warning: " + str(e) + " Try reconnect...", io_lock, None, None, COLORS.info)
+                ds_print(ds, "Warning: " + str(e) + " Try reconnect... {0}-st one".format(i), io_lock, None, None, COLORS.info)
                 time.sleep(FAIL_CONNECTION_WAIT_INTERVALS[i])
             else:
                 ds_print(ds, "Error: " + str(e) + " STOP trying.", io_lock, None, None, COLORS.error)
                 raise Exception('Fail to copy SW to {0}'.format(ds))
 
-    with SCPClient(ssh.get_transport(), socket_timeout=20, progress=progress) as scp:
+    with SCPClient(ssh.get_transport(), socket_timeout=20) as scp:
         scp.put(what, where, recursive=True)
