@@ -1,9 +1,16 @@
+import os
 import re
+from threading import RLock
 
 print_message_format = "> {0} < : {1}"
+progress_message_format = "action {action} on {host} progress {progress}"
+progress_char_set = ['\\', '+', '|', 'x', '/', '+', '-', 'x']
+progress_index = 0
+progress_lock = RLock()
+progress_visible = 0
 
 
-class COLORS:
+class COLORS(object):
 
     class STYLE:
         normal    = 0
@@ -62,10 +69,29 @@ class COLORS:
     ok = green
     info = cyan
 
+    cursor_up_lines   = "\x1b[{0}A"
+    cursor_up_line    = cursor_up_lines.format(1)
+    cursor_down_lines =  "\x1b[{0}B"
+    cursor_down_line  = cursor_down_lines.format(1)
+
+    cursor_to_position = "\x1b[{0};{1}H"
+
+    def move_cursor_to_position(row, column):
+        return COLORS.cursor_to_position.format(row, column)
+
+    clear_line = "\x1b[2K"
+    clear_line_to_end = "\x1b[0K"
+    clear_line_to_begin = "\x1b[1K"
+    clear_screen = "\x1b[2J"
+    clear_screen_to_begin = "\x1b[1J"
+    clear_screen_to_end = "\x1b[0J"
+    clear_screen_with_scrollback = "\x1b[3J"
+
+
 __ds_host_name_parse = re.compile(r'\b([A-Z]+?\d+?-[A-Z]{3})(\d+?)\b', re.IGNORECASE)
 
 
-def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None, message_color=None):
+def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None, message_color=None, progress=None):
     """
     Print colored message with formatted header
 
@@ -81,6 +107,8 @@ def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None
     :type host_color: COLORS
     :param message_color:
     :type message_color: COLORS
+    :param progress:
+    :type progress: bool
     :return: None
     """
 
@@ -104,19 +132,43 @@ def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None
     if print_lock:
         try:
             print_lock.acquire()
-        except:
-            pass
+        except Exception as e:
+            print(str(e))
 
-    print print_message_format.format(colored_host, colored_message)
+    global progress_lock
+    try:
+        progress_lock.acquire()
+    except Exception as e:
+        print(str(e))
 
-    if print_lock:
-        try:
-            print_lock.release()
-        except:
-            pass
+    global progress_visible
+
+    if progress_visible:
+        print COLORS.cursor_up_line + COLORS.clear_line + COLORS.cursor_up_line
+        progress_visible = False
+
+    global progress_index
+    if progress:
+        print progress_message_format.format(action=colored_message, host=colored_host, progress=progress_char_set[progress_index])
+
+        progress_visible = True
+        progress_index = (progress_index + 1) % len(progress_char_set)
+    else:
+        print print_message_format.format(colored_host, colored_message)
+
+    try:
+        progress_lock.release()
+    except Exception as e:
+        print(str(e))
+
+    try:
+        print_lock.release()
+    except Exception as e:
+        print(str(e))
+
     if log_file_name:
         try:
-            with open(log_file_name, 'a') as log_file:
+            with open(log_file_name, 'a+') as log_file:
                 log_file.write("{0}\n".format(message))
                 log_file.close()
         except IOError:
@@ -181,7 +233,13 @@ def ds_compare(left, right):
             return 0
 
     except IndexError:
-        return "" == ""
+        return "" != ""
     except TypeError:
-        return "" == ""
+        return "" != ""
 
+
+def get_terminal_dimension():
+    try:
+        return os.popen('stty size', 'r').read().split()
+    except:
+        return 0, 0

@@ -308,7 +308,19 @@ def update_ds(ds_name,
     try:
         node.net_connect.clear_buffer()
         time.sleep(1)
-        scp_copy(node.ip, node.user, node.password, sw[target_sw][node.hw_ver.upper()][source_folder], sw[target_sw][folder_on_ds], io_lock)
+        scp_copy(node.ip,
+                 node.user,
+                 node.password,
+                 sw[target_sw][node.hw_ver.upper()][source_folder],
+                 sw[target_sw][folder_on_ds],
+                 io_lock,
+                 lambda string,copied,total: ds_print("in",
+                                                      "transfer file",
+                                                      io_lock,
+                                                      None,
+                                                      color,
+                                                      None,
+                                                      True))
     except Exception as e:
         ds_print(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
         ds_print(ds_name,
