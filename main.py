@@ -466,7 +466,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.195")
+                                   version="1.1.196")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
@@ -546,6 +546,7 @@ if __name__ == "__main__":
     while result[TEMPORARY]:
 
         result_queue, threads = Queue(), list()
+        random_wait_time = len(result[TEMPORARY]) + 1
 
         if options.no_threads or len(result[TEMPORARY]) == 1:
             handled_ds_count = 0
