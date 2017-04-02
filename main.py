@@ -100,7 +100,8 @@ def update_ds(ds_name,
               io_lock=None,
               force_delete=False,
               log_to_file=False,
-              color=None):
+              color=None,
+              no_progress=False):
 
     if io_lock: time.sleep(random_wait_time * random.random())
     if log_to_file:
@@ -308,19 +309,28 @@ def update_ds(ds_name,
     try:
         node.net_connect.clear_buffer()
         time.sleep(1)
-        scp_copy(node.ip,
-                 node.user,
-                 node.password,
-                 sw[target_sw][node.hw_ver.upper()][source_folder],
-                 sw[target_sw][folder_on_ds],
-                 io_lock,
-                 lambda string,copied,total: ds_print("in",
-                                                      "transfer file",
-                                                      io_lock,
-                                                      None,
-                                                      color,
-                                                      None,
-                                                      True))
+        if no_progress:
+            scp_copy(node.ip,
+                     node.user,
+                     node.password,
+                     sw[target_sw][node.hw_ver.upper()][source_folder],
+                     sw[target_sw][folder_on_ds],
+                     io_lock,
+                     None)
+        else:
+            scp_copy(node.ip,
+                     node.user,
+                     node.password,
+                     sw[target_sw][node.hw_ver.upper()][source_folder],
+                     sw[target_sw][folder_on_ds],
+                     io_lock,
+                     lambda string,copied,total: ds_print("in",
+                                                          "transfer file",
+                                                          io_lock,
+                                                          None,
+                                                          color,
+                                                          None,
+                                                          True))
     except Exception as e:
         ds_print(ds_name, str(e), io_lock, log_file_name, color, COLORS.error)
         ds_print(ds_name,
@@ -456,7 +466,7 @@ def update_ds(ds_name,
 if __name__ == "__main__":
     parser = optparse.OptionParser(description='Prepare DS upgrade SW to \"{0}\" version.'.format(target_sw),
                                    usage="usage: %prog [options] [-f <DS list file> | ds ds ds ...]",
-                                   version="1.1.194")
+                                   version="1.1.195")
     parser.add_option("-f", "--file", dest="ds_list_file_name",
                       help="file with DS list, line started with # or / will be dropped", metavar="FILE")
     parser.add_option("-y", "--yes", dest="force_delete",
@@ -479,6 +489,9 @@ if __name__ == "__main__":
                       action="store_true")
     parser.add_option("--r13", "--R13", dest="r13",
                       help="load SW {0}".format(SW_R13), default=False,
+                      action="store_true")
+    parser.add_option("--np", "--no-progress", dest="no_progress",
+                      help="disable show progress", default=False,
                       action="store_true")
 
     (options, args) = parser.parse_args()
@@ -525,130 +538,125 @@ if __name__ == "__main__":
     print COLORS.info+"Start running: {0}".format(time.strftime("%H:%M:%S"))+COLORS.end
     start_time = time.time()
 
-    if len(ds_list) == 1:
-        update_ds(ds_list[0],
-                  user,
-                  secret,
-                  force_delete=options.force_delete,
-                  log_to_file=options.log_to_file)
-    else:
-        io_lock = threading.Lock()
-        result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
-        colorIndex = 0
-        ds_colors = {}
+    io_lock = threading.Lock()
+    result = {COMPLETE: list(), FATAL: list(), TEMPORARY: ds_list}
+    colorIndex = 0
+    ds_colors = {}
 
-        while result[TEMPORARY]:
+    while result[TEMPORARY]:
 
-            result_queue, threads = Queue(), list()
+        result_queue, threads = Queue(), list()
 
-            if options.no_threads:
-                handled_ds_count = 0
-                start_tour_time = time.time()
+        if options.no_threads or len(result[TEMPORARY]) == 1:
+            handled_ds_count = 0
+            start_tour_time = time.time()
 
-                for ds_name in result[TEMPORARY]:
-                    if ds_name not in ds_colors:
+            for ds_name in result[TEMPORARY]:
+                if ds_name not in ds_colors:
+                    ds_colors[ds_name] = None
+                try:
+                    update_ds(ds_name,
+                              user,
+                              secret,
+                              result_queue=result_queue,
+                              force_delete=options.force_delete,
+                              log_to_file=options.log_to_file,
+                              color=ds_colors[ds_name],
+                              no_progress=options.no_progress)
+                except Exception as e:
+                    ds_print(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
+                    result_queue.put({RESULT: FATAL, NAME: ds_name})
+                current_time = time.time()
+                handled_ds_count += 1
+                print '\n' + COLORS.info +\
+                      '=' * 8 + \
+                      ' total: {0}\t complete: {1}\t remaining: {2} '.format(len(result[TEMPORARY]),
+                                                                             handled_ds_count,
+                                                                             len(result[TEMPORARY])-handled_ds_count) + \
+                      '=' * 8
+                print '=' * 4 + \
+                      ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
+                                                                                       time.gmtime(current_time - start_time)),
+                                                                         time.strftime('%H:%M:%S',
+                                                                                       time.gmtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
+                      '=' * 4 + \
+                      '\n' + COLORS.end
+        else:
+            for ds_name in result[TEMPORARY]:
+                if ds_name not in ds_colors:
+                    if options.colorize:
+                        ds_colors[ds_name] = COLORS.colors[colorIndex]
+                        colorIndex = (colorIndex + 1) % len(COLORS.colors)
+                    else:
                         ds_colors[ds_name] = None
-                    try:
-                        update_ds(ds_name,
-                                  user,
-                                  secret,
-                                  result_queue=result_queue,
-                                  force_delete=options.force_delete,
-                                  log_to_file=options.log_to_file,
-                                  color=ds_colors[ds_name])
-                    except Exception as e:
-                        ds_print(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
-                        result_queue.put({RESULT: FATAL, NAME: ds_name})
-                    current_time = time.time()
-                    handled_ds_count += 1
-                    print '\n' + COLORS.info +\
-                          '=' * 8 + \
-                          ' total: {0}\t complete: {1}\t remaining: {2} '.format(len(result[TEMPORARY]),
-                                                                                 handled_ds_count,
-                                                                                 len(result[TEMPORARY])-handled_ds_count) + \
-                          '=' * 8
-                    print '=' * 4 + \
-                          ' time elapsed: {0}\t time remaining: {1} '.format(time.strftime('%H:%M:%S',
-                                                                                           time.gmtime(current_time - start_time)),
-                                                                             time.strftime('%H:%M:%S',
-                                                                                           time.gmtime((current_time-start_tour_time)/handled_ds_count*(len(result[TEMPORARY])-handled_ds_count)))) + \
-                          '=' * 4 + \
-                          '\n' + COLORS.end
-            else:
-                for ds_name in result[TEMPORARY]:
-                    if ds_name not in ds_colors:
-                        if options.colorize:
-                            ds_colors[ds_name] = COLORS.colors[colorIndex]
-                            colorIndex = (colorIndex + 1) % len(COLORS.colors)
-                        else:
-                            ds_colors[ds_name] = None
 
-                    thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
-                                                                                    user,
-                                                                                    secret,
-                                                                                    result_queue,
-                                                                                    io_lock,
-                                                                                    options.force_delete,
-                                                                                    options.log_to_file,
-                                                                                    ds_colors[ds_name]))
-                    thread.start()
-                    threads.append(thread)
+                thread = threading.Thread(target=update_ds, name=ds_name, args=(ds_name,
+                                                                                user,
+                                                                                secret,
+                                                                                result_queue,
+                                                                                io_lock,
+                                                                                options.force_delete,
+                                                                                options.log_to_file,
+                                                                                ds_colors[ds_name],
+                                                                                options.no_progress))
+                thread.start()
+                threads.append(thread)
 
-                for thread in threads:
-                    thread.join()
+            for thread in threads:
+                thread.join()
 
-            result[TEMPORARY] = list()
+        result[TEMPORARY] = list()
 
-            while not result_queue.empty():
-                thread_result = result_queue.get()
-                result[thread_result[RESULT]].append(thread_result[NAME])
+        while not result_queue.empty():
+            thread_result = result_queue.get()
+            result[thread_result[RESULT]].append(thread_result[NAME])
 
-            # determinate ds with unhandled error and mark it as FATAL
-            unhandled_ds = list()
-            for ds_name in ds_list:
-                if ds_name not in result[COMPLETE] and \
-                                ds_name not in result[TEMPORARY] and \
-                                ds_name not in result[FATAL]:
-                    unhandled_ds.append(ds_name)
+        # determinate ds with unhandled error and mark it as FATAL
+        unhandled_ds = list()
+        for ds_name in ds_list:
+            if ds_name not in result[COMPLETE] and \
+                            ds_name not in result[TEMPORARY] and \
+                            ds_name not in result[FATAL]:
+                unhandled_ds.append(ds_name)
 
-            for ds_name in unhandled_ds:
-                result[FATAL].append(ds_name)
-                if options.log_to_file:
-                    post_result({NAME: ds_name, RESULT: FATAL},
-                                None,
-                                time.strftime(log_file_format.format(ds_name=ds_name)))
+        for ds_name in unhandled_ds:
+            result[FATAL].append(ds_name)
+            if options.log_to_file:
+                post_result({NAME: ds_name, RESULT: FATAL},
+                            None,
+                            time.strftime(log_file_format.format(ds_name=ds_name)))
 
+        if options.colorize and not options.no_threads:
+            line_complete, line_temporary, line_fatal = COLORS.end, COLORS.end, COLORS.end
+        else:
+            line_complete, line_temporary, line_fatal = '', '', ''
+
+        for ds in sorted(result[COMPLETE], ds_compare):
             if options.colorize and not options.no_threads:
-                line_complete, line_temporary, line_fatal = COLORS.end, COLORS.end, COLORS.end
+                line_complete += ds_colors[ds] + ds + COLORS.end + " "
             else:
-                line_complete, line_temporary, line_fatal = '', '', ''
+                line_complete += ds + " "
+        for ds in sorted(result[TEMPORARY], ds_compare):
+            if options.colorize and not options.no_threads:
+                line_temporary += ds_colors[ds] + ds + COLORS.end + " "
+            else:
+                line_temporary += ds + " "
+        for ds in sorted(result[FATAL], ds_compare):
+            if options.colorize and not options.no_threads:
+                line_fatal += ds_colors[ds] + ds + COLORS.end + " "
+            else:
+                line_fatal += ds + " "
 
-            for ds in sorted(result[COMPLETE], ds_compare):
-                if options.colorize and not options.no_threads:
-                    line_complete += ds_colors[ds] + ds + COLORS.end + " "
-                else:
-                    line_complete += ds + " "
-            for ds in sorted(result[TEMPORARY], ds_compare):
-                if options.colorize and not options.no_threads:
-                    line_temporary += ds_colors[ds] + ds + COLORS.end + " "
-                else:
-                    line_temporary += ds + " "
-            for ds in sorted(result[FATAL], ds_compare):
-                if options.colorize and not options.no_threads:
-                    line_fatal += ds_colors[ds] + ds + COLORS.end + " "
-                else:
-                    line_fatal += ds + " "
+        if result[COMPLETE]:  print    COLORS.ok + "\nComplete on       : " + line_complete + COLORS.end
+        if result[TEMPORARY]: print COLORS.warning + "Temporary fault on: " + line_temporary + COLORS.end
+        if result[FATAL]:     print   COLORS.fatal + "Fatal error on    : " + line_fatal + COLORS.end
 
-            if result[COMPLETE]:  print    COLORS.ok + "\nComplete on       : " + line_complete + COLORS.end
-            if result[TEMPORARY]: print COLORS.warning + "Temporary fault on: " + line_temporary + COLORS.end
-            if result[FATAL]:     print   COLORS.fatal + "Fatal error on    : " + line_fatal + COLORS.end
-
-            if not result[TEMPORARY]: break  # finish try loading
-            answer = ''
-            while answer not in ["Y", "N"]:
-                answer = raw_input("\nRepeat load on temporary faulty nodes (Y-yes): ").strip().upper()
-            if answer != "Y": break
-            print
+        if not result[TEMPORARY]: break  # finish try loading
+        answer = ''
+        while answer not in ["Y", "N"]:
+            answer = raw_input("\nRepeat load on temporary faulty nodes (Y-yes): ").strip().upper()
+        if answer != "Y": break
+        print
 
     print COLORS.info + "\nFinish running: {0}".format(time.strftime("%H:%M:%S"))
     print 'Time lapsed: {0}'.format(time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))) + COLORS.end
