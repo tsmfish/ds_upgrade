@@ -259,5 +259,5 @@ def utilise_progress(without_lock=False):
     if not without_lock:
         try:
             progress_lock.release()
-        except Exception as :
+        except Exception as e:
             pass
