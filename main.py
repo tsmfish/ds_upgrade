@@ -636,17 +636,17 @@ if __name__ == "__main__":
             line_complete, line_temporary, line_fatal = '', '', ''
 
         for ds in sorted(result[COMPLETE], ds_compare):
-            if options.colorize and not options.no_threads:
+            if ds in ds_colors and ds_colors[ds]:
                 line_complete += ds_colors[ds] + ds + COLORS.end + " "
             else:
                 line_complete += ds + " "
         for ds in sorted(result[TEMPORARY], ds_compare):
-            if options.colorize and not options.no_threads:
+            if ds in ds_colors and ds_colors[ds]:
                 line_temporary += ds_colors[ds] + ds + COLORS.end + " "
             else:
                 line_temporary += ds + " "
         for ds in sorted(result[FATAL], ds_compare):
-            if options.colorize and not options.no_threads:
+            if ds in ds_colors and ds_colors[ds]:
                 line_fatal += ds_colors[ds] + ds + COLORS.end + " "
             else:
                 line_fatal += ds + " "
