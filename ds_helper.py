@@ -159,10 +159,11 @@ def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None
     except Exception as e:
         print(str(e))
 
-    try:
-        print_lock.release()
-    except Exception as e:
-        print(str(e))
+    if print_lock:
+        try:
+            print_lock.release()
+        except Exception as e:
+            print(str(e))
 
     if log_file_name:
         try:
