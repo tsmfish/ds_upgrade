@@ -11,7 +11,7 @@ from Queue import Queue
 
 from DS_Class import DS, ExceptionWrongPassword, ExceptionHostUnreachable
 from copy_over_scp import scp_copy
-from ds_helper import COLORS, ds_print, print_message_format, extract, is_contains, ds_compare
+from ds_helper import COLORS, ds_print, print_message_format, extract, is_contains, ds_compare, utilise_progress
 
 
 log_file_format = "%y%m%d_%H%M%S_{ds_name}.log"
@@ -564,7 +564,9 @@ if __name__ == "__main__":
                               log_to_file=options.log_to_file,
                               color=ds_colors[ds_name],
                               no_progress=options.no_progress)
+                    utilise_progress()
                 except Exception as e:
+                    utilise_progress()
                     ds_print(ds_name, "**! Unhandled exception " + str(e), ds_colors[ds_name], COLORS.error)
                     result_queue.put({RESULT: FATAL, NAME: ds_name})
                 current_time = time.time()
@@ -605,6 +607,7 @@ if __name__ == "__main__":
 
             for thread in threads:
                 thread.join()
+            utilise_progress()
 
         result[TEMPORARY] = list()
 

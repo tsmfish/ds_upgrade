@@ -133,19 +133,17 @@ def ds_print(host, message, print_lock=None, log_file_name=None, host_color=None
         try:
             print_lock.acquire()
         except Exception as e:
-            print(str(e))
+            pass
 
     global progress_lock
     try:
         progress_lock.acquire()
     except Exception as e:
-        print(str(e))
+        pass
 
     global progress_visible
 
-    if progress_visible:
-        print COLORS.cursor_up_line + COLORS.clear_line + COLORS.cursor_up_line
-        progress_visible = False
+    utilise_progress(True)
 
     global progress_index
     if progress:
@@ -243,3 +241,23 @@ def get_terminal_dimension():
         return os.popen('stty size', 'r').read().split()
     except:
         return 0, 0
+
+def utilise_progress(without_lock=False):
+    global progress_lock
+    if not without_lock:
+        try:
+            progress_lock.acquire()
+        except Exception as e:
+            pass
+
+    global progress_visible
+
+    if progress_visible:
+        print COLORS.cursor_up_line + COLORS.clear_line + COLORS.cursor_up_line
+        progress_visible = False
+
+    if not without_lock:
+        try:
+            progress_lock.release()
+        except Exception as :
+            pass
